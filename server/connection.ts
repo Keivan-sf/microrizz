@@ -8,7 +8,7 @@ interface Connection {
   on(type: "connection", cb: () => void): void;
 }
 
-class WSConnection {
+class WSConnection implements Connection {
   constructor(private wss: WebSocket) { }
   public on(type: "data", cb: (data: Buffer) => void): void;
   public on(type: "close", cb: () => void): void;
@@ -23,5 +23,8 @@ class WSConnection {
   }
   public write(data: Buffer) {
     this.wss.send(data);
+  }
+  public close() {
+    this.wss.close();
   }
 }
