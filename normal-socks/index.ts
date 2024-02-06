@@ -24,7 +24,7 @@ async function connection_listener(s: net.Socket) {
   });
   s.on("data", async (data: Buffer) => {
     try {
-      console.log("whole data is:", data);
+      // console.log("whole data is:", data);
       if (state == 0) {
         if (data.at(0) != 5) {
           throw new Error("version must be five");
