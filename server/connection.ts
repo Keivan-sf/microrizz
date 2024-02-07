@@ -1,12 +1,5 @@
 import { WebSocket } from "ws";
-export interface Connection {
-  write(data: Buffer): void;
-  close(): void;
-  on(type: "data", cb: (data: Buffer) => void): void;
-  on(type: "close", cb: () => void): void;
-  on(type: "error", cb: (error: any) => void): void;
-  on(type: "connection", cb: () => void): void;
-}
+import { Connection } from "./interfaces";
 
 export class WSConnection implements Connection {
   constructor(private wss: WebSocket) {}
