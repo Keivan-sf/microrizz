@@ -1,5 +1,5 @@
-import { WebSocketServer, WebSocket } from "ws";
-interface Connection {
+import { WebSocket } from "ws";
+export interface Connection {
   write(data: Buffer): void;
   close(): void;
   on(type: "data", cb: (data: Buffer) => void): void;
@@ -8,8 +8,8 @@ interface Connection {
   on(type: "connection", cb: () => void): void;
 }
 
-class WSConnection implements Connection {
-  constructor(private wss: WebSocket) { }
+export class WSConnection implements Connection {
+  constructor(private wss: WebSocket) {}
   public on(type: "data", cb: (data: Buffer) => void): void;
   public on(type: "close", cb: () => void): void;
   public on(type: "error", cb: (error: any) => void): void;
