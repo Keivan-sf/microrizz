@@ -16,7 +16,7 @@ export const parse_addr = (
     offset += 1;
     const domain_len = buffer.at(offset);
     offset += 1;
-    if (!domain_len) throw new Error("No lenght found for domain");
+    if (!domain_len) throw new Error("No length found for domain");
     const address = buffer.subarray(offset, offset + domain_len);
     const port = buffer.readUintBE(offset + domain_len, 2);
     const domain = address.toString();

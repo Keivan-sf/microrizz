@@ -1,10 +1,12 @@
 import { Connection } from "../interfaces";
+import net from "net";
 import * as utils from "./utils";
 
 const COMMANDS = {
   AUTH: 128,
   NEW_TASK: 129,
   CONNECT: 1,
+  DATA_TRANSFER: 2,
 };
 
 const ERRORS = {
@@ -14,7 +16,9 @@ const ERRORS = {
 };
 
 interface Task {
-  state: "connected" | "oppened" | "closed";
+  state: "connected" | "opened" | "closed";
+  id: number;
+  connection?: net.Socket;
 }
 
 export class Client {
@@ -67,6 +71,21 @@ export class Client {
 
   private handleConnectCmd(task: Task, data: Buffer) {
     const { port, host } = utils.parse_addr(data, 3);
+    task.connection = net.createConnection({ host, port });
+    task.connection.on("error", () => {
+      // close task with error
+    });
+    task.connection.once("connect", () => {
+      task.state = "connected";
+      console.log("connected to the requested host");
+      const b = Buffer.allocUnsafe(3);
+      b.writeUInt8(COMMANDS.CONNECT);
+      b.writeUintBE(task.id, 1, 2);
+      this.connection.write(b);
+    });
+    task.connection.on("data", (data) => {
+      console.log("connection on data", data);
+    });
     console.log(host, port);
   }
 
@@ -78,7 +97,7 @@ export class Client {
       );
       return;
     }
-    const task: Task = { state: "oppened" };
+    const task: Task = { id: TID, state: "opened" };
     this.tasks.set(TID, task);
     const res = Buffer.allocUnsafe(3);
     res.writeUInt8(COMMANDS.NEW_TASK);

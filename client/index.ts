@@ -53,5 +53,7 @@ client.on("message", (data: Buffer) => {
       console.log(`client #12 connected for sure`);
       connect(12);
     }
+  } else if (data.at(0) == 1) {
+    console.log("connection to the host established");
   }
 });
