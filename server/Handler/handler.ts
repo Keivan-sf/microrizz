@@ -1,14 +1,21 @@
 import { Connection } from "../interfaces";
+import * as utils from "./utils";
 
 const COMMANDS = {
   AUTH: 128,
   NEW_TASK: 129,
+  CONNECT: 1,
 };
 
 const ERRORS = {
   BAD_UNAME_PW: 1,
   TID_EXISTS: 2,
+  TID_NOT_FOUND: 4,
 };
+
+interface Task {
+  state: "connected" | "oppened" | "closed";
+}
 
 export class Client {
   public tasks: Map<number, Task> = new Map();
@@ -16,10 +23,15 @@ export class Client {
     connection.on("data", (data: Buffer) => {
       if (!data || data.length < 1) return;
       if ((data.at(0) as number) < 128) {
+        try {
+          this.handleTaskSpecificCommand(data);
+        } catch (err) {
+          console.log("task error", err);
+        }
         return;
       } else {
         try {
-          this.handleClientSpeceficCommand(data);
+          this.handleClientSpecificCommand(data);
         } catch (err) {
           console.log("error", err);
         }
@@ -27,15 +39,35 @@ export class Client {
     });
   }
 
-  public send(data: Buffer, pid?: number) {}
-  public close(data: Buffer, pid?: number) {}
+  private handleTaskSpecificCommand(data: Buffer) {
+    const TID = data.readUIntBE(1, 2);
+    const task = this.tasks.get(TID);
+    if (!task) {
+      this.connection.write(
+        Buffer.concat([
+          Buffer.from([0x00, data.at(0) ?? 0x00]),
+          data.subarray(1, 3),
+          Buffer.from([ERRORS.TID_NOT_FOUND]),
+        ]),
+      );
+      return;
+    }
+    if (data.at(0) == COMMANDS.CONNECT) {
+      this.handleConnectCmd(task, data);
+    }
+  }
 
-  private handleClientSpeceficCommand(data: Buffer) {
+  private handleClientSpecificCommand(data: Buffer) {
     if (data.at(0) == COMMANDS.AUTH) {
       this.authenticate(data);
     } else if (data.at(0) == COMMANDS.NEW_TASK) {
       this.createTask(data);
     }
+  }
+
+  private handleConnectCmd(task: Task, data: Buffer) {
+    const { port, host } = utils.parse_addr(data, 3);
+    console.log(host, port);
   }
 
   private createTask(data: Buffer) {
@@ -46,7 +78,7 @@ export class Client {
       );
       return;
     }
-    const task = new Task(this);
+    const task: Task = { state: "oppened" };
     this.tasks.set(TID, task);
     const res = Buffer.allocUnsafe(3);
     res.writeUInt8(COMMANDS.NEW_TASK);
@@ -67,8 +99,4 @@ export class Client {
       );
     }
   }
-}
-
-class Task {
-  constructor(client: Client) {}
 }
