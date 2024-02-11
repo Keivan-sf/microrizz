@@ -1,17 +1,19 @@
 import { Connection } from "../interfaces";
 import net from "net";
 import * as utils from "./utils";
+import { error } from "console";
 
 const COMMANDS = {
   AUTH: 128,
   NEW_TASK: 129,
   CONNECT: 1,
-  DATA_TRANSFER: 2,
+  DATA: 2,
 };
 
 const ERRORS = {
   BAD_UNAME_PW: 1,
   TID_EXISTS: 2,
+  NO_CONNECTION_ON_TASK: 3,
   TID_NOT_FOUND: 4,
 };
 
@@ -58,6 +60,8 @@ export class Client {
     }
     if (data.at(0) == COMMANDS.CONNECT) {
       this.handleConnectCmd(task, data);
+    } else if (data.at(0) == COMMANDS.DATA) {
+      this.handleDataCmd(task, data);
     }
   }
 
@@ -67,6 +71,19 @@ export class Client {
     } else if (data.at(0) == COMMANDS.NEW_TASK) {
       this.createTask(data);
     }
+  }
+
+  private handleDataCmd(task: Task, data: Buffer) {
+    if (!task.connection) {
+      const b = Buffer.allocUnsafe(5);
+      b.writeUInt8(0x00);
+      b.writeUInt8(COMMANDS.CONNECT, 1);
+      b.writeUintBE(task.id, 2, 2);
+      b.writeUInt8(ERRORS.NO_CONNECTION_ON_TASK, 4);
+      this.connection.write(b);
+      return;
+    }
+    task.connection.write(data.subarray(3));
   }
 
   private handleConnectCmd(task: Task, data: Buffer) {
@@ -84,7 +101,10 @@ export class Client {
       this.connection.write(b);
     });
     task.connection.on("data", (data) => {
-      console.log("connection on data", data);
+      const b = Buffer.allocUnsafe(3);
+      b.writeUInt8(COMMANDS.DATA);
+      b.writeUintBE(task.id, 1, 2);
+      this.connection.write(Buffer.concat([b, data]));
     });
     console.log(host, port);
   }
