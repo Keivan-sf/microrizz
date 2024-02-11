@@ -98,7 +98,11 @@ export class Client {
       const b = Buffer.allocUnsafe(3);
       b.writeUInt8(COMMANDS.CONNECT);
       b.writeUintBE(task.id, 1, 2);
-      this.connection.write(b);
+      const ip_buffer = utils.ip_to_buffer(
+        task.connection?.localAddress as string,
+        task.connection?.localPort as number,
+      );
+      this.connection.write(Buffer.concat([b, ip_buffer]));
     });
     task.connection.on("data", (data) => {
       const b = Buffer.allocUnsafe(3);
