@@ -36,6 +36,7 @@ export class Handler {
     this.ws.on("data", (data: Buffer) => {
       console.log("server message", data);
       if (data.at(0) == COMMANDS.AUTH && this.state == "auth") {
+        this.state = "ready";
         console.log("auth message arrived here");
       }
     });
