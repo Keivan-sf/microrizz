@@ -1,6 +1,7 @@
 import { WebSocket } from "ws";
 import { WSConnection } from "./ServerConnection";
-// const client = new WebSocket("ws://localhost:9092");
+import { Handler } from "./handler/handler";
+
 const COMMANDS = {
   AUTH: 128,
   NEW_TASK: 129,
@@ -30,6 +31,9 @@ async function main() {
     });
   });
   const wsConnection = new WSConnection(ws);
+  const handler = new Handler(wsConnection);
+  handler.start();
+  handler.authenticate("admin", "adminpw");
 }
 
 main();
