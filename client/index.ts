@@ -1,6 +1,6 @@
 import { WebSocket } from "ws";
-import { WSConnection } from "./ServerConnection";
-import { Handler } from "./handler/handler";
+import { WSConnection } from "./utils/Connection";
+import { Handler } from "./Server/index";
 
 const COMMANDS = {
   AUTH: 128,

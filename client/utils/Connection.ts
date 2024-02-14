@@ -1,7 +1,7 @@
-import { ServerConnection } from "./interface";
+import { Connection } from "./interfaces";
 import { WebSocket } from "ws";
 
-export class WSConnection implements ServerConnection {
+export class WSConnection implements Connection {
   constructor(private ws: WebSocket) {}
   public on(type: "data", cb: (data: Buffer) => void): void;
   public on(type: "close", cb: () => void): void;

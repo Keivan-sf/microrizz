@@ -1,4 +1,4 @@
-import { WSConnection } from "../ServerConnection";
+import { WSConnection } from "../utils/Connection";
 
 const COMMANDS = {
   AUTH: 128,

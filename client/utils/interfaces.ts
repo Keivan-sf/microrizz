@@ -1,4 +1,4 @@
-export interface ServerConnection {
+export interface Connection {
   write(data: Buffer): void;
   close(): void;
   on(type: "data", cb: (data: Buffer) => void): void;
