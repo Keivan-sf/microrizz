@@ -1,4 +1,4 @@
-import { WSConnection } from "../utils/Connection";
+import { Connection } from "../utils/interfaces";
 
 const COMMANDS = {
   AUTH: 128,
@@ -14,9 +14,9 @@ const ERRORS = {
   TID_NOT_FOUND: 4,
 };
 
-export class Handler {
+export class Server {
   private state: "none" | "auth" | "ready" = "none";
-  constructor(public ws: WSConnection) {}
+  constructor(public connection: Connection) {}
   public authenticate(uname: string, pw: string) {
     if (this.state != "none") {
       console.log("State is not on `none`");
@@ -29,11 +29,11 @@ export class Handler {
       Buffer.from([pw.length]),
       Buffer.from(pw),
     ]);
-    this.ws.write(auth_message);
+    this.connection.write(auth_message);
     this.state = "auth";
   }
   public start() {
-    this.ws.on("data", (data: Buffer) => {
+    this.connection.on("data", (data: Buffer) => {
       console.log("server message", data);
       if (data.at(0) == COMMANDS.AUTH && this.state == "auth") {
         this.state = "ready";
