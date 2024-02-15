@@ -1,6 +1,8 @@
 import { WebSocket } from "ws";
 import { WSConnection } from "./utils/Connection";
 import { Server } from "./Server/index";
+import { LocalSocksServer } from "./Socket";
+import net from "net";
 
 const COMMANDS = {
   AUTH: 128,
@@ -34,6 +36,9 @@ async function main() {
   const server = new Server(wsConnection);
   server.start();
   server.authenticate("admin", "adminpw");
+  const socketServer = net.createServer();
+  socketServer.listen(9091);
+  const socks_server = new LocalSocksServer(socketServer, server);
 }
 
 main();

@@ -3,7 +3,7 @@ import net from "net";
 const main = () => {
   const server = net.createServer();
   server.listen(9091);
-  server.on("listening", () => {
+  server.once("listening", () => {
     console.log("server listening on port 9091");
   });
   server.on("connection", connection_listener);

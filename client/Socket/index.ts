@@ -1,4 +1,35 @@
 import net from "net";
+import { Server } from "../Server";
+import { TaskManager } from "../utils/TaskManager";
+
+export class LocalSocksServer {
+  constructor(
+    private localServer: net.Server,
+    private remoteServer: Server,
+  ) {
+    localServer.on("connection", this.onConnection);
+    localServer.on("error", this.onError);
+    localServer.on("close", this.onClose);
+  }
+  private onClose() {}
+  private onError() {}
+  private onConnection(socket: net.Socket) {
+    new SocksClientConenction(socket);
+  }
+}
+
+class SocksClientConenction {
+  constructor(private socket: net.Socket) {
+    socket.on("data", this.onData);
+    socket.on("error", this.onError);
+    socket.on("close", this.onClose);
+  }
+  private onData(data: Buffer) {
+    console.log("client on data", data);
+  }
+  private onError() {}
+  private onClose() {}
+}
 
 async function connection_listener(s: net.Socket) {
   let state: 0 | 1 | 2 | 3 = 0;
