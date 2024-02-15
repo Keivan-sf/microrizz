@@ -7,9 +7,9 @@ export class LocalSocksServer {
     private localServer: net.Server,
     private remoteServer: Server,
   ) {
-    localServer.on("connection", this.onConnection);
-    localServer.on("error", this.onError);
-    localServer.on("close", this.onClose);
+    localServer.on("connection", (socket) => this.onConnection(socket));
+    localServer.on("error", () => this.onError());
+    localServer.on("close", () => this.onClose());
   }
   private onClose() {}
   private onError() {}
