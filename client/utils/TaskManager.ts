@@ -6,7 +6,7 @@ let used_TIDs: Set<number> = new Set();
 const tasks: Task[] = [];
 unused_TIDs = generateIDSet();
 
-export function createTask(): Task {
+function createTask(): Task {
   const task: Task = {
     tid: getTID(),
     incoming: new Duplex(),
@@ -16,7 +16,7 @@ export function createTask(): Task {
   return task;
 }
 
-export function freeTID(id: number) {
+function freeTID(id: number) {
   used_TIDs.delete(id);
   unused_TIDs.add(id);
 }
@@ -36,3 +36,9 @@ function generateIDSet(): Set<number> {
   }
   return set;
 }
+
+const TaskManager = {
+  createTask,
+  freeTID,
+};
+export default TaskManager;

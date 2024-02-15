@@ -1,6 +1,13 @@
 import net from "net";
 import { Server } from "../Server";
-import { TaskManager } from "../utils/TaskManager";
+import TaskManager from "../utils/TaskManager";
+import { Task } from "../utils/interfaces";
+
+const METHODS: { [key in number]: string } = {
+  1: "connect",
+  2: "bind",
+  3: "udp",
+};
 
 export class LocalSocksServer {
   constructor(
@@ -19,31 +26,48 @@ export class LocalSocksServer {
 }
 
 class SocksClientConenction {
+  public state: "auth" | "ready" | "connect" = "auth";
+  public task: Task | undefined = undefined;
   constructor(private socket: net.Socket) {
-    this.socket.on("data", (data) => this.onData(socket, data));
-    this.socket.on("error", () => this.onError(socket));
-    this.socket.on("close", () => this.onClose(socket));
+    this.socket.on("data", (data) => this.onData(data));
+    this.socket.on("error", () => this.onError());
+    this.socket.on("close", () => this.onClose());
   }
-  private onData(socket: net.Socket, data: Buffer) {
-    let state: "auth" | "ready" | "connect" = "auth";
+  private onData(data: Buffer) {
     console.log("client on data", data);
-    if (state == "auth") {
+    if (this.state == "auth") {
       if (data.at(0) != 5) {
-        return this.close(socket, "version was not five");
+        return this.close("version was not five");
       }
       if (data.readUInt8(1) < 1) {
-        return this.close(socket, "no method was provided by the client");
+        return this.close("no method was provided by the client");
       }
       this.socket.write(Buffer.from([0x05, 0x00]));
+      this.state = "ready";
+    }
+    if (this.state == "ready") {
+      if (data.at(0) != 5) {
+        return this.close("version was not five");
+      }
+      if (data.at(1) != 1) {
+        return this.close(
+          "method was not connect: " +
+            data.at(1) +
+            " meaning: " +
+            METHODS[data.at(1) as number],
+        );
+      }
+      this.task = TaskManager.createTask();
+      console.log("we have a connection request!");
     }
   }
-  private onError(socket: net.Socket) {
+  private onError() {
     console.log("socket on error ???");
   }
-  private onClose(socket: net.Socket) {
+  private onClose() {
     console.log("socket closed???");
   }
-  private close(socket: net.Socket, msg?: string) {
+  private close(msg?: string) {
     if (msg) console.log(msg);
   }
 }
