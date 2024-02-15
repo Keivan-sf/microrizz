@@ -126,7 +126,10 @@ export class Client {
     const res = Buffer.allocUnsafe(3);
     res.writeUInt8(COMMANDS.NEW_TASK);
     res.writeUIntBE(TID, 1, 2);
-    this.connection.write(res);
+    console.log("creating a task for tid:", TID);
+    setTimeout(() => {
+      this.connection.write(res);
+    }, 6000);
   }
 
   private authenticate(data: Buffer) {

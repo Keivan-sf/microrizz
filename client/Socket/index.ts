@@ -21,19 +21,23 @@ export class LocalSocksServer {
   private onClose() {}
   private onError() {}
   private onConnection(socket: net.Socket) {
-    new SocksClientConenction(socket);
+    new SocksClientConenction(socket, this.remoteServer);
   }
 }
 
 class SocksClientConenction {
   public state: "auth" | "ready" | "connect" = "auth";
   public task: Task | undefined = undefined;
-  constructor(private socket: net.Socket) {
+  constructor(
+    private socket: net.Socket,
+    private remoteServer: Server,
+  ) {
     this.socket.on("data", (data) => this.onData(data));
     this.socket.on("error", () => this.onError());
     this.socket.on("close", () => this.onClose());
   }
-  private onData(data: Buffer) {
+
+  private async onData(data: Buffer) {
     console.log("client on data", data);
     if (this.state == "auth") {
       if (data.at(0) != 5) {
@@ -57,8 +61,9 @@ class SocksClientConenction {
             METHODS[data.at(1) as number],
         );
       }
-      this.task = TaskManager.createTask();
       console.log("we have a connection request!");
+      this.task = await this.remoteServer.initiateTask();
+      console.log("we have a task for it!", this.task.tid);
     }
   }
   private onError() {

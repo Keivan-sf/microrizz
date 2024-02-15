@@ -1,18 +1,15 @@
 import { Duplex } from "stream";
 import { Task } from "./interfaces";
 
-let unused_TIDs: Set<number> = new Set();
+let unused_TIDs: Set<number> = generateIDSet();
 let used_TIDs: Set<number> = new Set();
-const tasks: Task[] = [];
-unused_TIDs = generateIDSet();
 
-function createTask(): Task {
+function createTaskInstance(): Task {
   const task: Task = {
     tid: getTID(),
     incoming: new Duplex(),
     outgoing: new Duplex(),
   };
-  tasks.push(task);
   return task;
 }
 
@@ -38,7 +35,7 @@ function generateIDSet(): Set<number> {
 }
 
 const TaskManager = {
-  createTask,
+  createTaskInstance,
   freeTID,
 };
 export default TaskManager;
