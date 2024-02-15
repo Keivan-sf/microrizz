@@ -20,15 +20,32 @@ export class LocalSocksServer {
 
 class SocksClientConenction {
   constructor(private socket: net.Socket) {
-    socket.on("data", this.onData);
-    socket.on("error", this.onError);
-    socket.on("close", this.onClose);
+    this.socket.on("data", (data) => this.onData(socket, data));
+    this.socket.on("error", () => this.onError(socket));
+    this.socket.on("close", () => this.onClose(socket));
   }
-  private onData(data: Buffer) {
+  private onData(socket: net.Socket, data: Buffer) {
+    let state: "auth" | "ready" | "connect" = "auth";
     console.log("client on data", data);
+    if (state == "auth") {
+      if (data.at(0) != 5) {
+        return this.close(socket, "version was not five");
+      }
+      if (data.readUInt8(1) < 1) {
+        return this.close(socket, "no method was provided by the client");
+      }
+      this.socket.write(Buffer.from([0x05, 0x00]));
+    }
   }
-  private onError() {}
-  private onClose() {}
+  private onError(socket: net.Socket) {
+    console.log("socket on error ???");
+  }
+  private onClose(socket: net.Socket) {
+    console.log("socket closed???");
+  }
+  private close(socket: net.Socket, msg?: string) {
+    if (msg) console.log(msg);
+  }
 }
 
 async function connection_listener(s: net.Socket) {
