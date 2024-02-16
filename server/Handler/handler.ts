@@ -95,9 +95,10 @@ export class Client {
     task.connection.once("connect", () => {
       task.state = "connected";
       console.log("connected to the requested host");
-      const b = Buffer.allocUnsafe(3);
+      const b = Buffer.allocUnsafe(4);
       b.writeUInt8(COMMANDS.CONNECT);
       b.writeUintBE(task.id, 1, 2);
+      b.writeUint8(1, 3);
       const ip_buffer = utils.ip_to_buffer(
         task.connection?.localAddress as string,
         task.connection?.localPort as number,
