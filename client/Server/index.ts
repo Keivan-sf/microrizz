@@ -25,7 +25,7 @@ export class Server {
   private state: "none" | "auth" | "ready" = "none";
   private tasks: Map<number, Task> = new Map();
   private task_initiation_promise: Map<number, TaskPromise<number>> = new Map();
-  private task_command_promise: Map<number, TaskPromise<number>> = new Map();
+  private task_command_promise: Map<number, TaskPromise<Buffer>> = new Map();
 
   constructor(public connection: Connection) {}
 
@@ -67,7 +67,15 @@ export class Server {
           return;
         }
         this.task_command_promise.delete(tid);
-        task_promise.resolve(task_promise.task.tid);
+        task_promise.resolve(data.subarray(3));
+      } else if (data.at(0) == COMMANDS.DATA && this.state == "ready") {
+        const tid = data.readUIntBE(1, 2);
+        const task = this.tasks.get(tid);
+        if (!task) {
+          console.log("no task for the tid");
+          return;
+        }
+        if (task.ondata) task.ondata(data.subarray(3));
       }
     });
   }
@@ -100,7 +108,7 @@ export class Server {
     if (task.dest) throw new Error("Task already has a destination");
     task.dest = destination;
     console.log(`the destination requested is:`, destination);
-    const promise = new Promise<number>((resolve, reject) => {
+    const promise = new Promise<Buffer>((resolve, reject) => {
       this.task_command_promise.set(task.tid, {
         task,
         resolve,
@@ -117,7 +125,20 @@ export class Server {
     );
     return promise;
   }
-
+  public setListenerToTask(tid: number, type: "data" | "close", callback: any) {
+    const task = this.tasks.get(tid);
+    if (!task) throw new Error("TID does not exist");
+    if (type == "data") {
+      task.ondata = callback;
+    } else if (type == "close") {
+      task.onclose = callback;
+    }
+  }
+  public writeToTask(tid: number, data: Buffer) {
+    const task = this.tasks.get(tid);
+    if (!task) throw new Error("TID does not exist");
+    this.connection.write(this.concatCmdAndTID(COMMANDS.DATA, tid, data));
+  }
   private concatCmdAndTID(cmd: number, tid: number, body?: Buffer) {
     const b = Buffer.allocUnsafe(3);
     b.writeUInt8(cmd);

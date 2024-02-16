@@ -1,5 +1,3 @@
-import { Duplex } from "stream";
-
 export interface Connection {
   write(data: Buffer): void;
   close(): void;
@@ -10,8 +8,8 @@ export interface Connection {
 }
 
 export interface Task {
-  incoming: Duplex;
-  outgoing: Duplex;
   tid: number;
   dest?: Buffer;
+  ondata?: (data: Buffer) => void;
+  onclose?: () => void;
 }

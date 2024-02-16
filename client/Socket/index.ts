@@ -26,7 +26,7 @@ export class LocalSocksServer {
 }
 
 class SocksClientConenction {
-  public state: "auth" | "ready" | "connect" = "auth";
+  public state: "auth" | "ready" | "connected" = "auth";
   public tid: number | undefined = undefined;
   constructor(
     private socket: net.Socket,
@@ -44,7 +44,7 @@ class SocksClientConenction {
         return this.close("version was not five");
       }
       if (data.readUInt8(1) < 1) {
-        return this.close("no method was provided by the client");
+        return this.close("no methods were provided by the client");
       }
       this.socket.write(Buffer.from([0x05, 0x00]));
       this.state = "ready";
@@ -63,8 +63,29 @@ class SocksClientConenction {
       console.log("we have a connection request!");
       this.tid = await this.remoteServer.initiateTask();
       console.log("we have a task for it!", this.tid);
-      await this.remoteServer.connectTaskToDest(this.tid, data.subarray(3));
+      const connectBindAddr = await this.remoteServer.connectTaskToDest(
+        this.tid,
+        data.subarray(3),
+      );
+      this.remoteServer.setListenerToTask(this.tid, "data", (data: Buffer) => {
+        this.socket.write(data);
+      });
+      this.socket.write(
+        Buffer.concat([Buffer.from([0x05, 0x00, 0x00]), connectBindAddr]),
+      );
+      // this.task.on("close", () => {
+      //   if (!this.socket.closed) this.socket.end();
+      // });
+      this.state = "connected";
       console.log("we are connected to the destination!");
+    } else if (this.state == "connected") {
+      console.log("on connected state the data is");
+      console.log(data);
+      if (!this.tid) {
+        console.log("no task but data coming anyway");
+        return;
+      }
+      this.remoteServer.writeToTask(this.tid, data);
     }
   }
   private onError() {
