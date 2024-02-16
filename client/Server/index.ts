@@ -134,6 +134,14 @@ export class Server {
       task.onclose = callback;
     }
   }
+
+  public closeTask(tid: number) {
+    const task = this.tasks.get(tid);
+    if(!task) return;
+    this.tasks.delete(tid);
+    TaskManager.freeTID(tid);
+  }
+
   public writeToTask(tid: number, data: Buffer) {
     const task = this.tasks.get(tid);
     if (!task) throw new Error("TID does not exist");
