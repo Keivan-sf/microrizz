@@ -127,9 +127,7 @@ export class Client {
     res.writeUInt8(COMMANDS.NEW_TASK);
     res.writeUIntBE(TID, 1, 2);
     console.log("creating a task for tid:", TID);
-    setTimeout(() => {
-      this.connection.write(res);
-    }, 6000);
+    this.connection.write(res);
   }
 
   private authenticate(data: Buffer) {
