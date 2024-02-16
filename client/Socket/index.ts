@@ -48,8 +48,7 @@ class SocksClientConenction {
       }
       this.socket.write(Buffer.from([0x05, 0x00]));
       this.state = "ready";
-    }
-    if (this.state == "ready") {
+    } else if (this.state == "ready") {
       if (data.at(0) != 5) {
         return this.close("version was not five");
       }
