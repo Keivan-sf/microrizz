@@ -47,7 +47,6 @@ export class Server {
 
   public start() {
     this.connection.on("data", (data: Buffer) => {
-      console.log("server message", data);
       if (data.at(0) == COMMANDS.AUTH && this.state == "auth") {
         this.state = "ready";
         console.log("auth message arrived here");
@@ -58,6 +57,7 @@ export class Server {
           return;
         }
         this.task_initiation_promise.delete(tid);
+        console.log("Setting", tid, "to tasks");
         this.tasks.set(tid, task_promise.task);
         task_promise.resolve(task_promise.task.tid);
       } else if (data.at(0) == COMMANDS.CONNECT && this.state == "ready") {
@@ -66,6 +66,7 @@ export class Server {
         if (!task_promise) {
           return;
         }
+        console.log("resolving", tid, " on connection command");
         this.task_command_promise.delete(tid);
         task_promise.resolve(data.subarray(3));
       } else if (data.at(0) == COMMANDS.DATA && this.state == "ready") {
@@ -137,7 +138,7 @@ export class Server {
 
   public closeTask(tid: number) {
     const task = this.tasks.get(tid);
-    if(!task) return;
+    if (!task) return;
     this.tasks.delete(tid);
     TaskManager.freeTID(tid);
   }

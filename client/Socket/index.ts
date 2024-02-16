@@ -38,52 +38,66 @@ class SocksClientConenction {
   }
 
   private async onData(data: Buffer) {
-    console.log("client on data", data);
-    if (this.state == "auth") {
-      if (data.at(0) != 5) {
-        return this.close("version was not five");
-      }
-      if (data.readUInt8(1) < 1) {
-        return this.close("no methods were provided by the client");
-      }
-      this.socket.write(Buffer.from([0x05, 0x00]));
-      this.state = "ready";
-    } else if (this.state == "ready") {
-      if (data.at(0) != 5) {
-        return this.close("version was not five");
-      }
-      if (data.at(1) != 1) {
-        return this.close(
-          "method was not connect: " +
-            data.at(1) +
-            " meaning: " +
-            METHODS[data.at(1) as number],
+    try {
+      if (this.state == "auth") {
+        if (data.at(0) != 5) {
+          return this.close("version was not five");
+        }
+        if (data.readUInt8(1) < 1) {
+          return this.close("no methods were provided by the client");
+        }
+        this.socket.write(Buffer.from([0x05, 0x00]));
+        this.state = "ready";
+      } else if (this.state == "ready") {
+        if (data.at(0) != 5) {
+          return this.close("version was not five");
+        }
+        if (data.at(1) != 1) {
+          return this.close(
+            "method was not connect: " +
+              data.at(1) +
+              " meaning: " +
+              METHODS[data.at(1) as number],
+          );
+        }
+        this.tid = await this.remoteServer.initiateTask();
+        console.log(
+          "A new task has been created for a connection request",
+          this.tid,
         );
+        console.log("Requesting connection for task", this.tid);
+        const connectBindAddr = await this.remoteServer.connectTaskToDest(
+          this.tid,
+          data.subarray(3),
+        );
+        console.log("task", this.tid, "was connected to dest");
+        console.log("setting on data listener for task", this.tid);
+        this.remoteServer.setListenerToTask(
+          this.tid,
+          "data",
+          (data: Buffer) => {
+            this.socket.write(data);
+          },
+        );
+
+        this.socket.write(
+          Buffer.concat([Buffer.from([0x05, 0x00, 0x00]), connectBindAddr]),
+        );
+        // this.task.on("close", () => {
+        //   if (!this.socket.closed) this.socket.end();
+        // });
+        this.state = "connected";
+      } else if (this.state == "connected") {
+        if (!this.tid) {
+          console.log("no task but data coming anyway", this.tid);
+          return;
+        }
+        this.remoteServer.writeToTask(this.tid, data);
       }
-      console.log("we have a connection request!");
-      this.tid = await this.remoteServer.initiateTask();
-      console.log("we have a task for it!", this.tid);
-      const connectBindAddr = await this.remoteServer.connectTaskToDest(
-        this.tid,
-        data.subarray(3),
-      );
-      this.remoteServer.setListenerToTask(this.tid, "data", (data: Buffer) => {
-        this.socket.write(data);
-      });
-      this.socket.write(
-        Buffer.concat([Buffer.from([0x05, 0x00, 0x00]), connectBindAddr]),
-      );
-      // this.task.on("close", () => {
-      //   if (!this.socket.closed) this.socket.end();
-      // });
-      this.state = "connected";
-      console.log("we are connected to the destination!");
-    } else if (this.state == "connected") {
-      if (!this.tid) {
-        console.log("no task but data coming anyway");
-        return;
-      }
-      this.remoteServer.writeToTask(this.tid, data);
+    } catch (err) {
+      console.log("handled error on data", err);
+      console.log("closing", this.tid);
+      this.close();
     }
   }
   private onError() {
@@ -95,6 +109,7 @@ class SocksClientConenction {
     console.log("socket closed???");
   }
   private close(msg?: string) {
+    if (this.tid) this.remoteServer.closeTask(this.tid);
     if (msg) console.log(msg);
   }
 }
