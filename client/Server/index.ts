@@ -15,17 +15,17 @@ const ERRORS = {
   TID_NOT_FOUND: 4,
 };
 
-type TaskInitiationPromise = {
+type TaskPromise<T> = {
   task: Task;
-  resolve: (value: Task | PromiseLike<Task>) => void;
+  resolve: (value: T | PromiseLike<T>) => void;
   reject: (reason?: any) => void;
 };
 
 export class Server {
   private state: "none" | "auth" | "ready" = "none";
   private tasks: Map<number, Task> = new Map();
-  private task_initiation_promise: Map<number, TaskInitiationPromise> =
-    new Map();
+  private task_initiation_promise: Map<number, TaskPromise<number>> = new Map();
+  private task_command_promise: Map<number, TaskPromise<number>> = new Map();
 
   constructor(public connection: Connection) {}
 
@@ -59,7 +59,15 @@ export class Server {
         }
         this.task_initiation_promise.delete(tid);
         this.tasks.set(tid, task_promise.task);
-        task_promise.resolve(task_promise.task);
+        task_promise.resolve(task_promise.task.tid);
+      } else if (data.at(0) == COMMANDS.CONNECT && this.state == "ready") {
+        const tid = data.readUIntBE(1, 2);
+        const task_promise = this.task_command_promise.get(tid);
+        if (!task_promise) {
+          return;
+        }
+        this.task_command_promise.delete(tid);
+        task_promise.resolve(task_promise.task.tid);
       }
     });
   }
@@ -67,7 +75,7 @@ export class Server {
   public initiateTask(timeout = 5000) {
     const task = TaskManager.createTaskInstance();
     const b = Buffer.allocUnsafe(3);
-    const promise = new Promise<Task>((resolve, reject) => {
+    const promise = new Promise<number>((resolve, reject) => {
       this.task_initiation_promise.set(task.tid, {
         task,
         resolve,
@@ -84,5 +92,37 @@ export class Server {
     b.writeUIntBE(task.tid, 1, 2);
     this.connection.write(b);
     return promise;
+  }
+
+  public connectTaskToDest(tid: number, destination: Buffer, timeout = 5000) {
+    const task = this.tasks.get(tid);
+    if (!task) throw new Error("TID does not exist");
+    if (task.dest) throw new Error("Task already has a destination");
+    task.dest = destination;
+    console.log(`the destination requested is:`, destination);
+    const promise = new Promise<number>((resolve, reject) => {
+      this.task_command_promise.set(task.tid, {
+        task,
+        resolve,
+        reject,
+      });
+      setTimeout(() => {
+        if (!this.task_command_promise.get(task.tid)) return;
+        this.task_command_promise.delete(task.tid);
+        reject("Task connect command time out reached");
+      }, timeout);
+    });
+    this.connection.write(
+      this.concatCmdAndTID(COMMANDS.CONNECT, task.tid, destination),
+    );
+    return promise;
+  }
+
+  private concatCmdAndTID(cmd: number, tid: number, body?: Buffer) {
+    const b = Buffer.allocUnsafe(3);
+    b.writeUInt8(cmd);
+    b.writeUIntBE(tid, 1, 2);
+    if (!body) return b;
+    return Buffer.concat([b, body]);
   }
 }

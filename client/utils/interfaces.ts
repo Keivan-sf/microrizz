@@ -13,4 +13,5 @@ export interface Task {
   incoming: Duplex;
   outgoing: Duplex;
   tid: number;
+  dest?: Buffer;
 }

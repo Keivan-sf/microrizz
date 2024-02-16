@@ -27,7 +27,7 @@ export class LocalSocksServer {
 
 class SocksClientConenction {
   public state: "auth" | "ready" | "connect" = "auth";
-  public task: Task | undefined = undefined;
+  public tid: number | undefined = undefined;
   constructor(
     private socket: net.Socket,
     private remoteServer: Server,
@@ -62,8 +62,10 @@ class SocksClientConenction {
         );
       }
       console.log("we have a connection request!");
-      this.task = await this.remoteServer.initiateTask();
-      console.log("we have a task for it!", this.task.tid);
+      this.tid = await this.remoteServer.initiateTask();
+      console.log("we have a task for it!", this.tid);
+      await this.remoteServer.connectTaskToDest(this.tid, data.subarray(3));
+      console.log("we are connected to the destination!");
     }
   }
   private onError() {
