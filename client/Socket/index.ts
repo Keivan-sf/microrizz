@@ -15,11 +15,15 @@ export class LocalSocksServer {
     private remoteServer: Server,
   ) {
     localServer.on("connection", (socket) => this.onConnection(socket));
-    localServer.on("error", () => this.onError());
+    localServer.on("error", (err) => this.onError(err));
     localServer.on("close", () => this.onClose());
   }
-  private onClose() {}
-  private onError() {}
+  private onClose() {
+    throw new Error("local socket closed");
+  }
+  private onError(err: any) {
+    throw new Error("local socket disconnected with an error" + err);
+  }
   private onConnection(socket: net.Socket) {
     new SocksClientConenction(socket, this.remoteServer);
   }
