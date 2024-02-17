@@ -7,6 +7,7 @@ const COMMANDS = {
   AUTH: 128,
   NEW_TASK: 129,
   CLIENT_CLOSE_TASK: 255,
+  SERVER_CLOSE_TASK: 254,
   CONNECT: 1,
   DATA: 2,
 };
@@ -90,18 +91,24 @@ export class Client {
   }
 
   private handleCloseTaskCmd(task: Task) {
-    this.closeTask(task);
+    this.closeTask(task, false);
     const b = Buffer.allocUnsafe(3);
     b.writeUint8(COMMANDS.CLIENT_CLOSE_TASK);
     b.writeUIntBE(task.id, 1, 2);
     this.connection.write(b);
   }
 
-  private closeTask(task: Task) {
+  private closeTask(task: Task, sendCloseCommandToClient = true) {
     if (task.connection) {
       if (!task.connection.closed) task.connection.end();
     }
     this.tasks.delete(task.id);
+    if (sendCloseCommandToClient) {
+      const b = Buffer.allocUnsafe(3);
+      b.writeUint8(COMMANDS.SERVER_CLOSE_TASK);
+      b.writeUIntBE(task.id, 1, 2);
+      this.connection.write(b);
+    }
   }
 
   private handleConnectCmd(task: Task, data: Buffer) {

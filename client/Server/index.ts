@@ -4,6 +4,7 @@ import TaskManager from "../utils/TaskManager";
 const COMMANDS = {
   AUTH: 128,
   NEW_TASK: 129,
+  SERVER_CLOSE_TASK: 254,
   CLIENT_CLOSE_TASK: 255,
   CONNECT: 1,
   DATA: 2,
@@ -78,6 +79,9 @@ export class Server {
           return;
         }
         if (task.ondata) task.ondata(data.subarray(3));
+      } else if (data.at(0) == COMMANDS.SERVER_CLOSE_TASK) {
+        const tid = data.readUIntBE(1, 2);
+        this.closeTask(tid, false);
       }
     });
   }
@@ -137,14 +141,16 @@ export class Server {
     }
   }
 
-  public closeTask(tid: number) {
+  public closeTask(tid: number, sendCloseCommandToServer = true) {
     const task = this.tasks.get(tid);
     if (!task) return;
     this.tasks.delete(tid);
     TaskManager.freeTID(tid);
-    this.connection.write(
-      this.concatCmdAndTID(COMMANDS.CLIENT_CLOSE_TASK, tid),
-    );
+    if (sendCloseCommandToServer) {
+      this.connection.write(
+        this.concatCmdAndTID(COMMANDS.CLIENT_CLOSE_TASK, tid),
+      );
+    }
   }
 
   public writeToTask(tid: number, data: Buffer) {
