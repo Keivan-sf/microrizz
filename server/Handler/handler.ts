@@ -6,6 +6,7 @@ import { error } from "console";
 const COMMANDS = {
   AUTH: 128,
   NEW_TASK: 129,
+  CLIENT_CLOSE_TASK: 255,
   CONNECT: 1,
   DATA: 2,
 };
@@ -62,6 +63,8 @@ export class Client {
       this.handleConnectCmd(task, data);
     } else if (data.at(0) == COMMANDS.DATA) {
       this.handleDataCmd(task, data);
+    } else if (data.at(0) == COMMANDS.CLIENT_CLOSE_TASK) {
+      this.handleCloseTaskCmd(task);
     }
   }
 
@@ -86,11 +89,29 @@ export class Client {
     task.connection.write(data.subarray(3));
   }
 
+  private handleCloseTaskCmd(task: Task) {
+    this.closeTask(task);
+    const b = Buffer.allocUnsafe(3);
+    b.writeUint8(COMMANDS.CLIENT_CLOSE_TASK);
+    b.writeUIntBE(task.id, 1, 2);
+    this.connection.write(b);
+  }
+
+  private closeTask(task: Task) {
+    if (task.connection) {
+      if (!task.connection.closed) task.connection.end();
+    }
+    this.tasks.delete(task.id);
+  }
+
   private handleConnectCmd(task: Task, data: Buffer) {
     const { port, host } = utils.parse_addr(data, 3);
     task.connection = net.createConnection({ host, port });
     task.connection.on("error", () => {
-      // close task with error
+      this.closeTask(task);
+    });
+    task.connection.on("close", () => {
+      this.closeTask(task);
     });
     task.connection.once("connect", () => {
       task.state = "connected";
