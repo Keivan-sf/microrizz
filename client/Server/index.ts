@@ -4,8 +4,8 @@ import TaskManager from "../utils/TaskManager";
 const COMMANDS = {
   AUTH: 128,
   NEW_TASK: 129,
-  SERVER_CLOSE_TASK: 254,
-  CLIENT_CLOSE_TASK: 255,
+  CLIENT_CLOSE_TASK: 127,
+  SERVER_CLOSE_TASK: 126,
   CONNECT: 1,
   DATA: 2,
 };
@@ -29,7 +29,7 @@ export class Server {
   private task_initiation_promise: Map<number, TaskPromise<number>> = new Map();
   private task_command_promise: Map<number, TaskPromise<Buffer>> = new Map();
 
-  constructor(public connection: Connection) { }
+  constructor(public connection: Connection) {}
 
   public authenticate(uname: string, pw: string) {
     if (this.state != "none") {
@@ -142,11 +142,14 @@ export class Server {
   }
 
   public closeTask(tid: number, sendCloseCommandToServer = true) {
+    console.log("sending close signal for", tid, "?", sendCloseCommandToServer);
     const task = this.tasks.get(tid);
+    console.log("task exists for ", tid);
     if (!task) return;
     this.tasks.delete(tid);
     TaskManager.freeTID(tid);
     if (sendCloseCommandToServer) {
+      console.log("writing close command to server");
       this.connection.write(
         this.concatCmdAndTID(COMMANDS.CLIENT_CLOSE_TASK, tid),
       );

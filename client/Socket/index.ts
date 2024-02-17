@@ -27,6 +27,7 @@ export class LocalSocksServer {
 
 class SocksClientConenction {
   public state: "auth" | "ready" | "connected" = "auth";
+  public is_closed = false;
   public tid: number | undefined = undefined;
   constructor(
     private socket: net.Socket,
@@ -61,6 +62,10 @@ class SocksClientConenction {
           );
         }
         this.tid = await this.remoteServer.initiateTask();
+        if (this.is_closed) {
+          this.remoteServer.closeTask(this.tid);
+          return;
+        }
         console.log(
           "A new task has been created for a connection request",
           this.tid,
@@ -101,15 +106,17 @@ class SocksClientConenction {
     }
   }
   private onError() {
-    if (this.tid) this.remoteServer.closeTask(this.tid);
+    this.close();
     console.log("socket on error ???");
   }
   private onClose() {
-    if (this.tid) this.remoteServer.closeTask(this.tid);
-    console.log("socket closed???");
+    this.close();
   }
   private close(msg?: string) {
+    console.log("socket closed???", this.tid);
+    this.is_closed = true;
     if (this.tid) this.remoteServer.closeTask(this.tid);
+    if (!this.socket.closed) this.socket.end();
     if (msg) console.log(msg);
   }
 }

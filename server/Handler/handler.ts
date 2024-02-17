@@ -6,8 +6,8 @@ import { error } from "console";
 const COMMANDS = {
   AUTH: 128,
   NEW_TASK: 129,
-  CLIENT_CLOSE_TASK: 255,
-  SERVER_CLOSE_TASK: 254,
+  CLIENT_CLOSE_TASK: 127,
+  SERVER_CLOSE_TASK: 126,
   CONNECT: 1,
   DATA: 2,
 };
