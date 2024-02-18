@@ -81,7 +81,7 @@ export class Server {
     });
   }
 
-  public initiateTask(timeout = 5000) {
+  public initiateTask(timeout = 10000) {
     const task = TaskManager.createTaskInstance();
     const b = Buffer.allocUnsafe(3);
     const promise = new Promise<number>((resolve, reject) => {
@@ -94,7 +94,7 @@ export class Server {
         if (!this.task_initiation_promise.get(task.tid)) return;
         this.task_initiation_promise.delete(task.tid);
         TaskManager.freeTID(task.tid);
-        reject("Task initiation time out reached");
+        reject("Task initiation time out reached for " + task.tid);
       }, timeout);
     });
     b.writeUInt8(COMMANDS.NEW_TASK);
@@ -103,7 +103,7 @@ export class Server {
     return promise;
   }
 
-  public connectTaskToDest(tid: number, destination: Buffer, timeout = 5000) {
+  public connectTaskToDest(tid: number, destination: Buffer, timeout = 10000) {
     const task = this.tasks.get(tid);
     if (!task) throw new Error("TID does not exist");
     if (task.dest) throw new Error("Task already has a destination");
@@ -136,7 +136,7 @@ export class Server {
   }
 
   public closeTask(tid: number, sendCloseCommandToServer = true) {
-    console.log('closing' , tid);
+    console.log("closing", tid);
     const task = this.tasks.get(tid);
     if (!task) return;
     this.tasks.delete(tid);
