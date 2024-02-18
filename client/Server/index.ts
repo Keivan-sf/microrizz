@@ -29,11 +29,10 @@ export class Server {
   private task_initiation_promise: Map<number, TaskPromise<number>> = new Map();
   private task_command_promise: Map<number, TaskPromise<Buffer>> = new Map();
 
-  constructor(public connection: Connection) {}
+  constructor(public connection: Connection) { }
 
   public authenticate(uname: string, pw: string) {
     if (this.state != "none") {
-      console.log("State is not on `none`");
       return;
     }
     const auth_message = Buffer.concat([
@@ -51,7 +50,6 @@ export class Server {
     this.connection.on("data", (data: Buffer) => {
       if (data.at(0) == COMMANDS.AUTH && this.state == "auth") {
         this.state = "ready";
-        console.log("auth message arrived here");
       } else if (data.at(0) == COMMANDS.NEW_TASK && this.state == "ready") {
         const tid = data.readUIntBE(1, 2);
         const task_promise = this.task_initiation_promise.get(tid);
@@ -59,7 +57,6 @@ export class Server {
           return;
         }
         this.task_initiation_promise.delete(tid);
-        console.log("Setting", tid, "to tasks");
         this.tasks.set(tid, task_promise.task);
         task_promise.resolve(task_promise.task.tid);
       } else if (data.at(0) == COMMANDS.CONNECT && this.state == "ready") {
@@ -68,14 +65,12 @@ export class Server {
         if (!task_promise) {
           return;
         }
-        console.log("resolving", tid, " on connection command");
         this.task_command_promise.delete(tid);
         task_promise.resolve(data.subarray(3));
       } else if (data.at(0) == COMMANDS.DATA && this.state == "ready") {
         const tid = data.readUIntBE(1, 2);
         const task = this.tasks.get(tid);
         if (!task) {
-          console.log("no task for the tid");
           return;
         }
         if (task.ondata) task.ondata(data.subarray(3));
@@ -113,7 +108,6 @@ export class Server {
     if (!task) throw new Error("TID does not exist");
     if (task.dest) throw new Error("Task already has a destination");
     task.dest = destination;
-    console.log(`the destination requested is:`, destination);
     const promise = new Promise<Buffer>((resolve, reject) => {
       this.task_command_promise.set(task.tid, {
         task,
@@ -142,14 +136,12 @@ export class Server {
   }
 
   public closeTask(tid: number, sendCloseCommandToServer = true) {
-    console.log("sending close signal for", tid, "?", sendCloseCommandToServer);
+    console.log('closing' , tid);
     const task = this.tasks.get(tid);
-    console.log("task exists for ", tid);
     if (!task) return;
     this.tasks.delete(tid);
     TaskManager.freeTID(tid);
     if (sendCloseCommandToServer) {
-      console.log("writing close command to server");
       this.connection.write(
         this.concatCmdAndTID(COMMANDS.CLIENT_CLOSE_TASK, tid),
       );

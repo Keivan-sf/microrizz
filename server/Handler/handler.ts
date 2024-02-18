@@ -1,7 +1,6 @@
 import { Connection } from "../interfaces";
 import net from "net";
 import * as utils from "./utils";
-import { error } from "console";
 
 const COMMANDS = {
   AUTH: 128,
@@ -34,14 +33,18 @@ export class Client {
         try {
           this.handleTaskSpecificCommand(data);
         } catch (err) {
-          console.log("task error", err);
+          console.log("error handling task specific command", data.at(0), err);
         }
         return;
       } else {
         try {
           this.handleClientSpecificCommand(data);
         } catch (err) {
-          console.log("error", err);
+          console.log(
+            "error handling client specific command",
+            data.at(0),
+            err,
+          );
         }
       }
     });
@@ -123,7 +126,6 @@ export class Client {
     });
     task.connection.once("connect", () => {
       task.state = "connected";
-      console.log("connected to the requested host");
       const b = Buffer.allocUnsafe(4);
       b.writeUInt8(COMMANDS.CONNECT);
       b.writeUintBE(task.id, 1, 2);
@@ -140,7 +142,6 @@ export class Client {
       b.writeUintBE(task.id, 1, 2);
       this.connection.write(Buffer.concat([b, data]));
     });
-    console.log(host, port);
   }
 
   private createTask(data: Buffer) {
@@ -156,7 +157,6 @@ export class Client {
     const res = Buffer.allocUnsafe(3);
     res.writeUInt8(COMMANDS.NEW_TASK);
     res.writeUIntBE(TID, 1, 2);
-    console.log("creating a task for tid:", TID);
     this.connection.write(res);
   }
 
