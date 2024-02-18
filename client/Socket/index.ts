@@ -1,7 +1,5 @@
 import net from "net";
 import { Server } from "../Server";
-import TaskManager from "../utils/TaskManager";
-import { Task } from "../utils/interfaces";
 
 const METHODS: { [key in number]: string } = {
   1: "connect",
