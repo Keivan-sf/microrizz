@@ -19,26 +19,42 @@ const ERRORS = {
 };
 
 async function main() {
-  const ws = new WebSocket("ws://localhost:9092");
-  await new Promise<void>((resolve, reject) => {
-    let is_resolved = false;
-    setTimeout(() => {
-      if (!is_resolved) {
-        reject("time out");
-      }
-    }, 10000);
-    ws.once("open", () => {
-      console.log("the connection has been established");
+  while (true) {
+    const ws = new WebSocket("ws://localhost:9092");
+    await new Promise<void>((resolve, reject) => {
+      let is_resolved = false;
+      setTimeout(() => {
+        if (!is_resolved) {
+          reject("time out");
+        }
+      }, 10000);
+      ws.once("open", () => {
+        is_resolved = true;
+        console.log("the connection has been established");
+        resolve();
+      });
+    });
+    const wsConnection = new WSConnection(ws);
+    const server = new Server(wsConnection);
+    server.start();
+    server.authenticate("admin", "adminpw");
+    const socketServer = net.createServer();
+    socketServer.listen(9091);
+    const socks_server = new LocalSocksServer(socketServer, server);
+    await waitTillDisconnection(wsConnection);
+    try {
+      socks_server.destroy();
+      wsConnection.close();
+    } catch (err) { }
+  }
+}
+
+async function waitTillDisconnection(ws: WSConnection): Promise<void> {
+  return new Promise<void>((resolve) => {
+    ws.on("close", () => {
       resolve();
     });
   });
-  const wsConnection = new WSConnection(ws);
-  const server = new Server(wsConnection);
-  server.start();
-  server.authenticate("admin", "adminpw");
-  const socketServer = net.createServer();
-  socketServer.listen(9091);
-  const socks_server = new LocalSocksServer(socketServer, server);
 }
 
 main();

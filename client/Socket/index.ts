@@ -25,6 +25,14 @@ export class LocalSocksServer {
   private onConnection(socket: net.Socket) {
     new SocksClientConenction(socket, this.remoteServer);
   }
+  public destroy() {
+    try {
+      this.localServer.removeAllListeners();
+    } catch (err) { }
+    try {
+      this.localServer.close();
+    } catch (err) { }
+  }
 }
 
 class SocksClientConenction {
@@ -35,7 +43,7 @@ class SocksClientConenction {
     private socket: net.Socket,
     private remoteServer: Server,
   ) {
-    this.socket.setTimeout(5000);
+    // this.socket.setTimeout(5000);
     this.socket.on("data", (data) => this.onData(data));
     this.socket.on("error", () => this.onError());
     this.socket.on("close", () => this.onClose());
