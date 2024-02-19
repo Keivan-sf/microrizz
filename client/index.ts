@@ -3,6 +3,7 @@ import { WSConnection } from "./utils/Connection";
 import { Server } from "./Server/index";
 import { LocalSocksServer } from "./Socket";
 import net from "net";
+const SERVER = process.argv[2] ?? "ws://localhost:9092";
 
 const COMMANDS = {
   AUTH: 128,
@@ -20,7 +21,7 @@ const ERRORS = {
 
 async function main() {
   while (true) {
-    const ws = new WebSocket("ws://localhost:9092");
+    const ws = new WebSocket(SERVER);
     await new Promise<void>((resolve, reject) => {
       let is_resolved = false;
       setTimeout(() => {
