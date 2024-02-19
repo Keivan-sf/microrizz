@@ -35,9 +35,11 @@ class SocksClientConenction {
     private socket: net.Socket,
     private remoteServer: Server,
   ) {
+    this.socket.setTimeout(5000);
     this.socket.on("data", (data) => this.onData(data));
     this.socket.on("error", () => this.onError());
     this.socket.on("close", () => this.onClose());
+    this.socket.on("timeout", () => this.onTimeout());
   }
 
   private async onData(data: Buffer) {
@@ -106,6 +108,9 @@ class SocksClientConenction {
     this.close();
   }
   private onClose() {
+    this.close();
+  }
+  private onTimeout() {
     this.close();
   }
   private close() {
