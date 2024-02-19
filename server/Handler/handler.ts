@@ -104,7 +104,7 @@ export class Client {
   private closeTask(task: Task, sendCloseCommandToClient = true) {
     console.log("closed", task.id);
     if (task.connection) {
-      if (!task.connection.closed) task.connection.end();
+      if (!task.connection.destroyed) task.connection.destroy();
     }
     this.tasks.delete(task.id);
     if (sendCloseCommandToClient) {

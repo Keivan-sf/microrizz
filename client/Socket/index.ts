@@ -111,6 +111,6 @@ class SocksClientConenction {
   private close() {
     this.is_closed = true;
     if (this.tid) this.remoteServer.closeTask(this.tid);
-    if (!this.socket.closed) this.socket.end();
+    if (!this.socket.destroyed) this.socket.destroy();
   }
 }
