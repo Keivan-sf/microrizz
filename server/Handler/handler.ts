@@ -21,12 +21,20 @@ const ERRORS = {
 interface Task {
   state: "connected" | "opened" | "closed";
   id: number;
+  last_activity: number;
+  interval?: NodeJS.Timeout;
   connection?: net.Socket;
 }
 
 export class Client {
   public tasks: Map<number, Task> = new Map();
-  constructor(public connection: Connection) {
+  constructor(
+    public connection: Connection,
+    private timeout: number,
+  ) {
+    setInterval(() => {
+      console.log("number of stored tasks", this.tasks.size);
+    }, 10000);
     connection.on("data", (data: Buffer) => {
       if (!data || data.length < 1) return;
       if ((data.at(0) as number) < 128) {
@@ -63,6 +71,7 @@ export class Client {
       );
       return;
     }
+    task.last_activity = Date.now();
     if (data.at(0) == COMMANDS.CONNECT) {
       this.handleConnectCmd(task, data);
     } else if (data.at(0) == COMMANDS.DATA) {
@@ -103,6 +112,9 @@ export class Client {
 
   private closeTask(task: Task, sendCloseCommandToClient = true) {
     console.log("closed", task.id);
+    if (task.interval) {
+      clearInterval(task.interval);
+    }
     if (task.connection) {
       if (!task.connection.destroyed) task.connection.destroy();
     }
@@ -125,6 +137,7 @@ export class Client {
       this.closeTask(task);
     });
     task.connection.once("connect", () => {
+      task.last_activity = Date.now();
       task.state = "connected";
       const b = Buffer.allocUnsafe(4);
       b.writeUInt8(COMMANDS.CONNECT);
@@ -137,6 +150,7 @@ export class Client {
       this.connection.write(Buffer.concat([b, ip_buffer]));
     });
     task.connection.on("data", (data) => {
+      task.last_activity = Date.now();
       const b = Buffer.allocUnsafe(3);
       b.writeUInt8(COMMANDS.DATA);
       b.writeUintBE(task.id, 1, 2);
@@ -152,7 +166,14 @@ export class Client {
       );
       return;
     }
-    const task: Task = { id: TID, state: "opened" };
+    const task: Task = { id: TID, state: "opened", last_activity: Date.now() };
+    const interval = setInterval(() => {
+      if (Date.now() - task.last_activity > this.timeout) {
+        console.log("closing due to timeout", TID);
+        this.closeTask(task, true);
+      }
+    }, this.timeout);
+    task.interval = interval;
     this.tasks.set(TID, task);
     const res = Buffer.allocUnsafe(3);
     res.writeUInt8(COMMANDS.NEW_TASK);

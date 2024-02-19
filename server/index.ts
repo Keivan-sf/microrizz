@@ -4,6 +4,7 @@ import { WSConnection } from "./connection";
 import { Client } from "./Handler/handler";
 import { NetworkImbalancer } from "./Utils/NetworkImbalancer";
 const PORT = 9092;
+const TIME_OUT = 5000;
 
 export const startServer = () => {
   const app = express();
@@ -13,7 +14,7 @@ export const startServer = () => {
   const server2 = app.listen(PORT);
   const wss = new WebSocketServer({ server: server2 });
   wss.on("connection", (ws) => {
-    new Client(new WSConnection(ws));
+    new Client(new WSConnection(ws), TIME_OUT);
   });
 
   wss.on("listening", () => {
