@@ -30,9 +30,16 @@ async function main() {
         }
       }, 10000);
       ws.once("open", () => {
+        if (is_resolved) return;
         is_resolved = true;
         console.log("the connection has been established");
         resolve();
+      });
+      ws.once("error", (err: any) => {
+        if (is_resolved) return;
+        is_resolved = true;
+        console.log("WS connection error", err);
+        reject();
       });
     });
     const wsConnection = new WSConnection(ws);
@@ -46,7 +53,7 @@ async function main() {
     try {
       socks_server.destroy();
       wsConnection.close();
-    } catch (err) { }
+    } catch (err) {}
   }
 }
 
