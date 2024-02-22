@@ -3,7 +3,9 @@ import express from "express";
 import { WSConnection } from "./connection";
 import { Client } from "./Handler/handler";
 import { NetworkImbalancer } from "./Utils/NetworkImbalancer";
-const PORT = 9092;
+import { config } from "dotenv";
+config();
+const PORT = process.env.PORT;
 const TIME_OUT = 5000;
 
 export const startServer = () => {
