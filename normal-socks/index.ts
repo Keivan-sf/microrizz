@@ -25,19 +25,24 @@ async function udp_listener(server: dgram.Socket) {
   //  | 2  |  1   |  1   | Variable |    2     | Variable |
   //  +----+------+------+----------+----------+----------+
   server.on("message", (data, info) => {
-    const { host, port, offset } = parse_addr(data, 3);
+    const { host, port, offset, type } = parse_addr(data, 3);
     const msg = data.subarray(offset);
-    console.log("udp message here", data, info);
-    console.log("ip and port", host, port);
-    console.log("data", msg.toString("utf8"));
     const response = Buffer.from([0x00, 0x01]);
-    server.send(response, info.port, info.address);
     const udp_socket = dgram.createSocket("udp4");
     udp_socket.send(msg, port, host);
     udp_socket.on("message", (remote_data) => {
       const prefix = Buffer.from([0x00, 0x00, 0x00]);
-      const ip_buffer = ip_to_buffer("127.0.0.1", PORT);
-      // server.send(ip_buffer);
+      const ip_buffer =
+        type == "ipv4"
+          ? Buffer.concat([Buffer.from([0x01]), ip_to_buffer(host, port)])
+          : type == "ipv6"
+            ? Buffer.concat([Buffer.from([0x04]), ipv6_to_buffer(host, port)])
+            : Buffer.concat([
+                Buffer.from([0x03]),
+                domain_to_buffer(host, port),
+              ]);
+      const response = Buffer.concat([prefix, ip_buffer, msg]);
+      server.send(response, info.port, info.address);
     });
   });
 }
@@ -103,7 +108,6 @@ async function connection_listener(s: net.Socket) {
             state++;
           }
         } else if (data.at(1) == 3) {
-          console.log(data);
           const prefix = Buffer.from([0x05, 0x00, 0x00, 0x01]);
           const ip_buffer = ip_to_buffer("127.0.0.1", PORT);
           s.write(Buffer.concat([prefix, ip_buffer]));
@@ -168,7 +172,6 @@ const parse_addr = (
       type: "domain",
     };
   } else {
-    console.log("ipv6 data", buffer.subarray(offset + 1));
     offset += 1;
     let ipv6str = "";
     for (let b = 0; b < 16; ++b) {
@@ -178,8 +181,6 @@ const parse_addr = (
         (buffer.at(offset + b) as number).toString(16);
     }
     const port = buffer.readUintBE(offset + 16, 2);
-    console.log("ipv6 parsed", ipv6str, port);
-    console.log("ipv6 reversed", ipv6_to_buffer(ipv6str, port));
     return { host: ipv6str, port, offset: offset + 16 + 2, type: "ipv6" };
   }
 };
