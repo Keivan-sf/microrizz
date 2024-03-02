@@ -173,6 +173,11 @@ export class Client {
     if (task.connection) {
       if (!task.connection.destroyed) task.connection.destroy();
     }
+    if (task.udpSocket) {
+      try {
+        task.udpSocket.close();
+      } catch (err) {}
+    }
     this.tasks.delete(task.id);
     if (sendCloseCommandToClient) {
       const b = Buffer.allocUnsafe(3);
