@@ -1,4 +1,4 @@
-const parse_addr = (
+export const parse_addr = (
   buffer: Buffer,
   offset: number = 0,
 ): {
