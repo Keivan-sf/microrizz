@@ -103,7 +103,7 @@ export class Client {
     if (!task.connection) {
       const b = Buffer.allocUnsafe(5);
       b.writeUInt8(0x00);
-      b.writeUInt8(COMMANDS.CONNECT, 1);
+      b.writeUInt8(COMMANDS.DATA, 1);
       b.writeUintBE(task.id, 2, 2);
       b.writeUInt8(ERRORS.NO_CONNECTION_ON_TASK, 4);
       this.connection.write(b);
@@ -129,7 +129,7 @@ export class Client {
       b.writeUInt8(ERRORS.NO_UDPSOCKET_ON_TASK, 4);
       this.connection.write(b);
       return;
-    } 
+    }
     const { host, port, offset } = utils.parse_addr(data, 4);
     const message = data.subarray(offset);
     task.udpSocket.send(message, port, host);
