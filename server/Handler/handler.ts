@@ -114,6 +114,28 @@ export class Client {
 
   private handleUdpAssociateCmd(task: Task, data: Buffer) {
     task.udpSocket = dgram.createSocket("udp4");
+    task.udpSocket.on("message", (message, info) => {
+      task.last_activity = Date.now();
+      const prefix = Buffer.allocUnsafe(4);
+      let ip_buffer: Buffer;
+      prefix.writeUint8(COMMANDS.UDP_DATA);
+      prefix.writeUintBE(task.id, 1, 2);
+      prefix.writeUint8(0x00, 3);
+      this.connection.write(Buffer.concat([b, data]));
+      if (info.family == "IPv4") {
+        ip_buffer = Buffer.concat([
+          Buffer.from([0x01]),
+          utils.ip_to_buffer(info.address, info.port),
+        ]);
+      } else {
+        ip_buffer = Buffer.concat([
+          Buffer.from([0x04]),
+          utils.ipv6_to_buffer(info.address, info.port),
+        ]);
+      }
+      const res = Buffer.concat([prefix, ip_buffer, message]);
+      this.connection.write(res);
+    });
     const b = Buffer.allocUnsafe(3);
     b.writeUInt8(COMMANDS.UDP_ASSOCIATE);
     b.writeUintBE(task.id, 1, 2);
