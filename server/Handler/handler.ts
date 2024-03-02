@@ -5,10 +5,11 @@ import * as utils from "./utils";
 const COMMANDS = {
   AUTH: 128,
   NEW_TASK: 129,
-  CLIENT_CLOSE_TASK: 127,
-  SERVER_CLOSE_TASK: 126,
+  // less than 128 commands are task specific
   CONNECT: 1,
   DATA: 2,
+  SERVER_CLOSE_TASK: 126,
+  CLIENT_CLOSE_TASK: 127,
 };
 
 const ERRORS = {

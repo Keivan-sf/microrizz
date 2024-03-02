@@ -4,10 +4,11 @@ import TaskManager from "../utils/TaskManager";
 const COMMANDS = {
   AUTH: 128,
   NEW_TASK: 129,
-  CLIENT_CLOSE_TASK: 127,
-  SERVER_CLOSE_TASK: 126,
+  // less than 128 commands are task specific
   CONNECT: 1,
   DATA: 2,
+  SERVER_CLOSE_TASK: 126,
+  CLIENT_CLOSE_TASK: 127,
 };
 
 const ERRORS = {
@@ -29,7 +30,7 @@ export class Server {
   private task_initiation_promise: Map<number, TaskPromise<number>> = new Map();
   private task_command_promise: Map<number, TaskPromise<Buffer>> = new Map();
 
-  constructor(public connection: Connection) { }
+  constructor(public connection: Connection) {}
 
   public authenticate(uname: string, pw: string) {
     if (this.state != "none") {
