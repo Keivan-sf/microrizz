@@ -83,6 +83,8 @@ export class Client {
       this.handleDataCmd(task, data);
     } else if (data.at(0) == COMMANDS.UDP_ASSOCIATE) {
       this.handleUdpAssociateCmd(task, data);
+    } else if (data.at(0) == COMMANDS.UDP_DATA) {
+      this.handleUdpDataCmd(task, data);
     } else if (data.at(0) == COMMANDS.CLIENT_CLOSE_TASK) {
       this.handleCloseTaskCmd(task);
     }
@@ -115,6 +117,13 @@ export class Client {
     b.writeUInt8(COMMANDS.UDP_ASSOCIATE);
     b.writeUintBE(task.id, 1, 2);
     this.connection.write(b);
+  }
+
+  private handleUdpDataCmd(task: Task, data: Buffer) {
+    if (!task.udpSocket) return; // send error message here
+    const { host, port, offset } = utils.parse_addr(data, 4);
+    const message = data.subarray(offset);
+    task.udpSocket.send(message, port, host);
   }
 
   private handleCloseTaskCmd(task: Task) {
