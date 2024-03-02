@@ -1,6 +1,7 @@
 import { Connection } from "../interfaces";
 import net from "net";
 import * as utils from "./utils";
+import dgram from "dgram";
 
 const COMMANDS = {
   AUTH: 128,
@@ -8,6 +9,8 @@ const COMMANDS = {
   // less than 128 commands are task specific
   CONNECT: 1,
   DATA: 2,
+  UDP_ASSOCIATE: 3,
+  UDP_DATA: 4,
   SERVER_CLOSE_TASK: 126,
   CLIENT_CLOSE_TASK: 127,
 };
@@ -25,6 +28,7 @@ interface Task {
   last_activity: number;
   interval?: NodeJS.Timeout;
   connection?: net.Socket;
+  udpSocket?: dgram.Socket;
 }
 
 export class Client {
@@ -77,6 +81,8 @@ export class Client {
       this.handleConnectCmd(task, data);
     } else if (data.at(0) == COMMANDS.DATA) {
       this.handleDataCmd(task, data);
+    } else if (data.at(0) == COMMANDS.UDP_ASSOCIATE) {
+      this.handleUdpAssociateCmd(task, data);
     } else if (data.at(0) == COMMANDS.CLIENT_CLOSE_TASK) {
       this.handleCloseTaskCmd(task);
     }
@@ -101,6 +107,14 @@ export class Client {
       return;
     }
     task.connection.write(data.subarray(3));
+  }
+
+  private handleUdpAssociateCmd(task: Task, data: Buffer) {
+    task.udpSocket = dgram.createSocket("udp4");
+    const b = Buffer.allocUnsafe(3);
+    b.writeUInt8(COMMANDS.UDP_ASSOCIATE);
+    b.writeUintBE(task.id, 1, 2);
+    this.connection.write(b);
   }
 
   private handleCloseTaskCmd(task: Task) {
