@@ -20,6 +20,7 @@ const ERRORS = {
   TID_EXISTS: 2,
   NO_CONNECTION_ON_TASK: 3,
   TID_NOT_FOUND: 4,
+  NO_UDPSOCKET_ON_TASK: 5,
 };
 
 interface Task {
@@ -120,7 +121,15 @@ export class Client {
   }
 
   private handleUdpDataCmd(task: Task, data: Buffer) {
-    if (!task.udpSocket) return; // send error message here
+    if (!task.udpSocket) {
+      const b = Buffer.allocUnsafe(5);
+      b.writeUInt8(0x00);
+      b.writeUInt8(COMMANDS.UDP_DATA, 1);
+      b.writeUintBE(task.id, 2, 2);
+      b.writeUInt8(ERRORS.NO_UDPSOCKET_ON_TASK, 4);
+      this.connection.write(b);
+      return;
+    } 
     const { host, port, offset } = utils.parse_addr(data, 4);
     const message = data.subarray(offset);
     task.udpSocket.send(message, port, host);
