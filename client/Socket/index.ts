@@ -1,5 +1,7 @@
 import net from "net";
 import { Server } from "../Server";
+import dgram from "dgram";
+import * as parsers from "../utils/address_parsers";
 
 const METHODS: { [key in number]: string } = {
   1: "connect",
@@ -28,10 +30,10 @@ export class LocalSocksServer {
   public destroy() {
     try {
       this.localServer.removeAllListeners();
-    } catch (err) { }
+    } catch (err) {}
     try {
       this.localServer.close();
-    } catch (err) { }
+    } catch (err) {}
   }
 }
 
@@ -39,6 +41,7 @@ class SocksClientConenction {
   public state: "auth" | "ready" | "connected" = "auth";
   public is_closed = false;
   public tid: number | undefined = undefined;
+  private udpSocket: dgram.Socket | undefined;
   constructor(
     private socket: net.Socket,
     private remoteServer: Server,
@@ -68,39 +71,48 @@ class SocksClientConenction {
           console.log("version was not five");
           return this.close();
         }
-        if (data.at(1) != 1) {
+        if (data.at(1) == 1) {
+          this.tid = await this.remoteServer.initiateTask();
+          if (this.is_closed) {
+            this.remoteServer.closeTask(this.tid);
+            return;
+          }
+          const connectBindAddr = await this.remoteServer.connectTaskToDest(
+            this.tid,
+            data.subarray(3),
+          );
+          this.remoteServer.setListenerToTask(
+            this.tid,
+            "data",
+            (data: Buffer) => {
+              this.socket.write(data);
+            },
+          );
+
+          this.socket.write(
+            Buffer.concat([Buffer.from([0x05, 0x00, 0x00]), connectBindAddr]),
+          );
+          // this.task.on("close", () => {
+          //   if (!this.socket.closed) this.socket.end();
+          // });
+          this.state = "connected";
+        } else if (data.at(1) == 3) {
+          // udp
+          this.tid = await this.remoteServer.initiateTask();
+          if (this.is_closed) {
+            this.remoteServer.closeTask(this.tid);
+            return;
+          }
+          // CONTINUE HERE
+        } else {
           console.log(
-            "method was not connect: " +
-            data.at(1) +
-            " meaning: " +
-            METHODS[data.at(1) as number],
+            "method was not supported: " +
+              data.at(1) +
+              " meaning: " +
+              METHODS[data.at(1) as number],
           );
           return this.close();
         }
-        this.tid = await this.remoteServer.initiateTask();
-        if (this.is_closed) {
-          this.remoteServer.closeTask(this.tid);
-          return;
-        }
-        const connectBindAddr = await this.remoteServer.connectTaskToDest(
-          this.tid,
-          data.subarray(3),
-        );
-        this.remoteServer.setListenerToTask(
-          this.tid,
-          "data",
-          (data: Buffer) => {
-            this.socket.write(data);
-          },
-        );
-
-        this.socket.write(
-          Buffer.concat([Buffer.from([0x05, 0x00, 0x00]), connectBindAddr]),
-        );
-        // this.task.on("close", () => {
-        //   if (!this.socket.closed) this.socket.end();
-        // });
-        this.state = "connected";
       } else if (this.state == "connected") {
         if (!this.tid) {
           return;
