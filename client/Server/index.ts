@@ -7,6 +7,8 @@ const COMMANDS = {
   // less than 128 commands are task specific
   CONNECT: 1,
   DATA: 2,
+  UDP_ASSOCIATE: 3,
+  UDP_DATA: 4,
   SERVER_CLOSE_TASK: 126,
   CLIENT_CLOSE_TASK: 127,
 };
@@ -16,6 +18,7 @@ const ERRORS = {
   TID_EXISTS: 2,
   NO_CONNECTION_ON_TASK: 3,
   TID_NOT_FOUND: 4,
+  NO_UDPSOCKET_ON_TASK: 5,
 };
 
 type TaskPromise<T> = {
@@ -28,7 +31,8 @@ export class Server {
   private state: "none" | "auth" | "ready" = "none";
   private tasks: Map<number, Task> = new Map();
   private task_initiation_promise: Map<number, TaskPromise<number>> = new Map();
-  private task_command_promise: Map<number, TaskPromise<Buffer>> = new Map();
+  private task_connect_promise: Map<number, TaskPromise<Buffer>> = new Map();
+  private task_udp_promise: Map<number, TaskPromise<void>> = new Map();
 
   constructor(public connection: Connection) {}
 
@@ -62,12 +66,23 @@ export class Server {
         task_promise.resolve(task_promise.task.tid);
       } else if (data.at(0) == COMMANDS.CONNECT && this.state == "ready") {
         const tid = data.readUIntBE(1, 2);
-        const task_promise = this.task_command_promise.get(tid);
+        const task_promise = this.task_connect_promise.get(tid);
         if (!task_promise) {
           return;
         }
-        this.task_command_promise.delete(tid);
+        this.task_connect_promise.delete(tid);
         task_promise.resolve(data.subarray(3));
+      } else if (
+        data.at(0) == COMMANDS.UDP_ASSOCIATE &&
+        this.state == "ready"
+      ) {
+        const tid = data.readUIntBE(1, 2);
+        const task_promise = this.task_udp_promise.get(tid);
+        if (!task_promise) {
+          return;
+        }
+        this.task_udp_promise.delete(tid);
+        task_promise.resolve();
       } else if (data.at(0) == COMMANDS.DATA && this.state == "ready") {
         const tid = data.readUIntBE(1, 2);
         const task = this.tasks.get(tid);
@@ -104,20 +119,44 @@ export class Server {
     return promise;
   }
 
-  public connectTaskToDest(tid: number, destination: Buffer, timeout = 10000) {
+  public createUDPAssociationForTask(tid: number, timeout = 10000) {
     const task = this.tasks.get(tid);
     if (!task) throw new Error("TID does not exist");
-    if (task.dest) throw new Error("Task already has a destination");
-    task.dest = destination;
-    const promise = new Promise<Buffer>((resolve, reject) => {
-      this.task_command_promise.set(task.tid, {
+    if (task.inuse) throw new Error("Task already in use");
+    task.inuse = true;
+    const promise = new Promise<void>((resolve, reject) => {
+      this.task_udp_promise.set(task.tid, {
         task,
         resolve,
         reject,
       });
       setTimeout(() => {
-        if (!this.task_command_promise.get(task.tid)) return;
-        this.task_command_promise.delete(task.tid);
+        if (!this.task_udp_promise.get(task.tid)) return;
+        this.task_udp_promise.delete(task.tid);
+        reject("Task udp associate command time out reached");
+      }, timeout);
+    });
+    this.connection.write(
+      this.concatCmdAndTID(COMMANDS.UDP_ASSOCIATE, task.tid),
+    );
+    return promise;
+  }
+
+  public connectTaskToDest(tid: number, destination: Buffer, timeout = 10000) {
+    const task = this.tasks.get(tid);
+    if (!task) throw new Error("TID does not exist");
+    if (task.inuse) throw new Error("Task already in use");
+    task.dest = destination;
+    task.inuse = true;
+    const promise = new Promise<Buffer>((resolve, reject) => {
+      this.task_connect_promise.set(task.tid, {
+        task,
+        resolve,
+        reject,
+      });
+      setTimeout(() => {
+        if (!this.task_connect_promise.get(task.tid)) return;
+        this.task_connect_promise.delete(task.tid);
         reject("Task connect command time out reached");
       }, timeout);
     });

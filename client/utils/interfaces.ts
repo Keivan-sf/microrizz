@@ -10,6 +10,8 @@ export interface Connection {
 export interface Task {
   tid: number;
   dest?: Buffer;
+  inuse: boolean;
   ondata?: (data: Buffer) => void;
+  onUdpData?: (data: Buffer) => void;
   onclose?: () => void;
 }

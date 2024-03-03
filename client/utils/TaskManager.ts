@@ -7,6 +7,7 @@ let used_TIDs: Set<number> = new Set();
 function createTaskInstance(): Task {
   const task: Task = {
     tid: getTID(),
+    inuse: false,
   };
   return task;
 }
