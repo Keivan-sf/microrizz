@@ -90,6 +90,11 @@ export class Server {
           return;
         }
         if (task.ondata) task.ondata(data.subarray(3));
+      } else if (data.at(0) == COMMANDS.UDP_DATA && this.state == "ready") {
+        const tid = data.readUIntBE(1, 2);
+        const task = this.tasks.get(tid);
+        if (!task) return;
+        if (task.onUdpData) task.onUdpData(data.subarray(3));
       } else if (data.at(0) == COMMANDS.SERVER_CLOSE_TASK) {
         const tid = data.readUIntBE(1, 2);
         this.closeTask(tid, false);
