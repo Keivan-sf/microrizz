@@ -2,6 +2,7 @@ import net from "net";
 import { Server } from "../Server";
 import dgram from "dgram";
 import * as parsers from "../utils/address_parsers";
+import { UdpSocketServer } from "./udpServer";
 
 const METHODS: { [key in number]: string } = {
   1: "connect",
@@ -13,6 +14,7 @@ export class LocalSocksServer {
   constructor(
     private localServer: net.Server,
     private remoteServer: Server,
+    private udpServer: UdpSocketServer,
   ) {
     localServer.on("connection", (socket) => this.onConnection(socket));
     localServer.on("error", (err) => this.onError(err));
@@ -25,15 +27,15 @@ export class LocalSocksServer {
     throw new Error("local socket disconnected with an error" + err);
   }
   private onConnection(socket: net.Socket) {
-    new SocksClientConenction(socket, this.remoteServer);
+    new SocksClientConenction(socket, this.remoteServer, this.udpServer);
   }
   public destroy() {
     try {
       this.localServer.removeAllListeners();
-    } catch (err) {}
+    } catch (err) { }
     try {
       this.localServer.close();
-    } catch (err) {}
+    } catch (err) { }
   }
 }
 
@@ -41,10 +43,10 @@ class SocksClientConenction {
   public state: "auth" | "ready" | "connected" = "auth";
   public is_closed = false;
   public tid: number | undefined = undefined;
-  private udpSocket: dgram.Socket | undefined;
   constructor(
     private socket: net.Socket,
     private remoteServer: Server,
+    private udpServer: UdpSocketServer,
   ) {
     // this.socket.setTimeout(5000);
     this.socket.on("data", (data) => this.onData(data));
@@ -107,9 +109,9 @@ class SocksClientConenction {
         } else {
           console.log(
             "method was not supported: " +
-              data.at(1) +
-              " meaning: " +
-              METHODS[data.at(1) as number],
+            data.at(1) +
+            " meaning: " +
+            METHODS[data.at(1) as number],
           );
           return this.close();
         }

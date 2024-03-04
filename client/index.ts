@@ -3,6 +3,7 @@ import { WSConnection } from "./utils/Connection";
 import { Server } from "./Server/index";
 import { LocalSocksServer } from "./Socket";
 import net from "net";
+import { UdpSocketServer } from "./Socket/udpServer";
 const SERVER = process.argv[2] ?? "ws://localhost:9092";
 
 const COMMANDS = {
@@ -44,16 +45,22 @@ async function main() {
     });
     const wsConnection = new WSConnection(ws);
     const server = new Server(wsConnection);
+    console.log('server has been created')
     server.start();
+    console.log('server has been started')
     server.authenticate("admin", "adminpw");
+    console.log('successful auth')
     const socketServer = net.createServer();
     socketServer.listen(9091);
-    const socks_server = new LocalSocksServer(socketServer, server);
+    console.log('tcp server created')
+    const udpServer = new UdpSocketServer(9091);
+    console.log('udp instance created');
+    const socks_server = new LocalSocksServer(socketServer, server, udpServer);
     await waitTillDisconnection(wsConnection);
     try {
       socks_server.destroy();
       wsConnection.close();
-    } catch (err) {}
+    } catch (err) { }
   }
 }
 
