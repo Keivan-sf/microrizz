@@ -3,7 +3,7 @@ import dgram from "dgram";
 interface UdpTask {
   address: string;
   port: number;
-  ondata?: (data?: Buffer) => void;
+  ondata?: (data: Buffer) => void;
   onclose?: () => void;
 }
 export class UdpSocketServer {
@@ -33,8 +33,8 @@ export class UdpSocketServer {
   addTask(
     address: string,
     port: number,
-    ondata: (data?: Buffer) => {},
-    onclose: () => {},
+    ondata: (data: Buffer) => void,
+    onclose: () => void,
   ) {
     const task: UdpTask = {
       port,

@@ -34,7 +34,7 @@ export class Server {
   private task_connect_promise: Map<number, TaskPromise<Buffer>> = new Map();
   private task_udp_promise: Map<number, TaskPromise<void>> = new Map();
 
-  constructor(public connection: Connection) {}
+  constructor(public connection: Connection) { }
 
   public authenticate(uname: string, pw: string) {
     if (this.state != "none") {
@@ -170,13 +170,19 @@ export class Server {
     );
     return promise;
   }
-  public setListenerToTask(tid: number, type: "data" | "close", callback: any) {
+  public setListenerToTask(
+    tid: number,
+    type: "data" | "close" | "udpData",
+    callback: any,
+  ) {
     const task = this.tasks.get(tid);
     if (!task) throw new Error("TID does not exist");
     if (type == "data") {
       task.ondata = callback;
     } else if (type == "close") {
       task.onclose = callback;
+    } else if (type == "udpData") {
+      task.onUdpData = callback;
     }
   }
 
@@ -198,6 +204,13 @@ export class Server {
     if (!task) throw new Error("TID does not exist");
     this.connection.write(this.concatCmdAndTID(COMMANDS.DATA, tid, data));
   }
+
+  public writeToTaskUDP(tid: number, data: Buffer) {
+    const task = this.tasks.get(tid);
+    if (!task) throw new Error("TID does not exist");
+    this.connection.write(this.concatCmdAndTID(COMMANDS.UDP_DATA, tid, data));
+  }
+
   private concatCmdAndTID(cmd: number, tid: number, body?: Buffer) {
     const b = Buffer.allocUnsafe(3);
     b.writeUInt8(cmd);

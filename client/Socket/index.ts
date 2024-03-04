@@ -40,7 +40,7 @@ export class LocalSocksServer {
 }
 
 class SocksClientConenction {
-  public state: "auth" | "ready" | "connected" = "auth";
+  public state: "auth" | "ready" | "connected-tcp" | "connected-udp" = "auth";
   public is_closed = false;
   public tid: number | undefined = undefined;
   constructor(
@@ -97,15 +97,36 @@ class SocksClientConenction {
           // this.task.on("close", () => {
           //   if (!this.socket.closed) this.socket.end();
           // });
-          this.state = "connected";
+          this.state = "connected-tcp";
         } else if (data.at(1) == 3) {
           // udp
           this.tid = await this.remoteServer.initiateTask();
-          if (this.is_closed) {
+          if (this.is_closed || !this.tid) {
             this.remoteServer.closeTask(this.tid);
             return;
           }
-          // CONTINUE HERE
+          await this.remoteServer.createUDPAssociationForTask(this.tid);
+          const { host, port } = parsers.parse_addr(data.subarray(3));
+          this.state = "connected-udp";
+          this.udpServer.addTask(
+            host,
+            port,
+            (data: Buffer) => {
+              if (!this.tid) return;
+              this.remoteServer.writeToTaskUDP(this.tid, data);
+            },
+            () => {
+              if (!this.tid) return;
+              this.remoteServer.closeTask(this.tid);
+            },
+          );
+          this.remoteServer.setListenerToTask(
+            this.tid,
+            "udpData",
+            (data: Buffer) => {
+              this.udpServer.sendDataToTask(data, host, port);
+            },
+          );
         } else {
           console.log(
             "method was not supported: " +
@@ -115,7 +136,7 @@ class SocksClientConenction {
           );
           return this.close();
         }
-      } else if (this.state == "connected") {
+      } else if (this.state == "connected-tcp") {
         if (!this.tid) {
           return;
         }
