@@ -102,7 +102,7 @@ export class Server {
     });
   }
 
-  public initiateTask(timeout = 10000) {
+  public initiateTask(timeout = 15000) {
     const task = TaskManager.createTaskInstance();
     const b = Buffer.allocUnsafe(3);
     const promise = new Promise<number>((resolve, reject) => {
