@@ -6,7 +6,7 @@ import { NetworkImbalancer } from "./Utils/NetworkImbalancer";
 import { config } from "dotenv";
 config();
 const PORT = process.env.PORT;
-const TIME_OUT = 5000;
+const TIME_OUT = 15000;
 
 export const startServer = () => {
   const app = express();
