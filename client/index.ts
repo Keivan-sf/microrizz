@@ -11,20 +11,6 @@ if (!SERVER) {
   process.exit(1);
 }
 
-const COMMANDS = {
-  AUTH: 128,
-  NEW_TASK: 129,
-  CONNECT: 1,
-  DATA: 2,
-};
-
-const ERRORS = {
-  BAD_UNAME_PW: 1,
-  TID_EXISTS: 2,
-  NO_CONNECTION_ON_TASK: 3,
-  TID_NOT_FOUND: 4,
-};
-
 async function main() {
   while (true) {
     const ws = new WebSocket(SERVER);
@@ -77,9 +63,9 @@ async function waitTillDisconnection(ws: WSConnection): Promise<void> {
     ws.on("close", () => {
       resolve();
     });
-    ws.on("error" , () => {
+    ws.on("error", () => {
       resolve();
-    })
+    });
   });
 }
 
