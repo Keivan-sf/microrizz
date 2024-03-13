@@ -3,16 +3,17 @@ import TaskManager from "../utils/TaskManager";
 import { ActivityTimeout } from "./ActivityTimeout";
 
 const COMMANDS = {
-  AUTH: 128,
-  NEW_TASK: 129,
-  HEART_BEAT: 255,
-  // less than 128 commands are task specific
+  // Task specific commands (0-127)
   CONNECT: 1,
   DATA: 2,
   UDP_ASSOCIATE: 3,
   UDP_DATA: 4,
   SERVER_CLOSE_TASK: 126,
   CLIENT_CLOSE_TASK: 127,
+  // General commands (128-255)
+  HEART_BEAT: 255,
+  AUTH: 128,
+  NEW_TASK: 129,
 };
 
 const ERRORS = {

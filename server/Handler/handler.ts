@@ -4,18 +4,18 @@ import * as utils from "./utils";
 import dgram from "dgram";
 
 const COMMANDS = {
-  HEART_BEAT: 255,
-  AUTH: 128,
-  NEW_TASK: 129,
-  // less than 128 commands are task specific
+  // Task specific commands (0-127)
   CONNECT: 1,
   DATA: 2,
   UDP_ASSOCIATE: 3,
   UDP_DATA: 4,
   SERVER_CLOSE_TASK: 126,
   CLIENT_CLOSE_TASK: 127,
+  // General commands (128-255)
+  HEART_BEAT: 255,
+  AUTH: 128,
+  NEW_TASK: 129,
 };
-
 const ERRORS = {
   BAD_UNAME_PW: 1,
   TID_EXISTS: 2,
@@ -185,7 +185,7 @@ export class Client {
     if (task.udpSocket) {
       try {
         task.udpSocket.close();
-      } catch (err) {}
+      } catch (err) { }
     }
     this.tasks.delete(task.id);
     if (sendCloseCommandToClient) {
