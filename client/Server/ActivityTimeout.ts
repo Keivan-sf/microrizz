@@ -7,7 +7,6 @@ export class ActivityTimeout {
   ) {}
 
   refresh() {
-    console.log("refresh called");
     if (this.timer) {
       clearTimeout(this.timer);
     }
