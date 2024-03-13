@@ -40,12 +40,15 @@ export class Server {
 
   constructor(
     public connection: Connection,
+    private onclose: () => void = () => {
+      throw new Error("connection closed");
+    },
     private server_connection_timeout = 5000,
     private heart_beat_interval: number = 2000,
   ) {
     this.activity_timeout = new ActivityTimeout(
       this.server_connection_timeout,
-      "Server connection timeout reached",
+      this.onclose,
     );
   }
 

@@ -3,7 +3,7 @@ export class ActivityTimeout {
 
   constructor(
     public timeout: number,
-    public error_msg: string,
+    public onTimeout: () => void,
   ) {}
 
   refresh() {
@@ -12,7 +12,7 @@ export class ActivityTimeout {
       clearTimeout(this.timer);
     }
     this.timer = setTimeout(() => {
-      throw new Error(this.error_msg);
+      this.onTimeout();
     }, this.timeout);
   }
 }
