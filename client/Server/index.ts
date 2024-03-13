@@ -36,11 +36,18 @@ export class Server {
   private task_initiation_promise: Map<number, TaskPromise<number>> = new Map();
   private task_connect_promise: Map<number, TaskPromise<Buffer>> = new Map();
   private task_udp_promise: Map<number, TaskPromise<void>> = new Map();
+  private activity_timeout: ActivityTimeout;
 
   constructor(
     public connection: Connection,
+    private server_connection_timeout = 5000,
     private heart_beat_interval: number = 2000,
-  ) { }
+  ) {
+    this.activity_timeout = new ActivityTimeout(
+      this.server_connection_timeout,
+      "Server connection timeout reached",
+    );
+  }
 
   public authenticate(uname: string, pw: string) {
     if (this.state != "none") {
@@ -60,6 +67,7 @@ export class Server {
   public start() {
     this.keepAlive();
     this.connection.on("data", (data: Buffer) => {
+      this.activity_timeout.refresh();
       if (data.at(0) == COMMANDS.AUTH && this.state == "auth") {
         this.state = "ready";
       } else if (data.at(0) == COMMANDS.NEW_TASK && this.state == "ready") {
