@@ -77,6 +77,9 @@ async function waitTillDisconnection(ws: WSConnection): Promise<void> {
     ws.on("close", () => {
       resolve();
     });
+    ws.on("error" , () => {
+      resolve();
+    })
   });
 }
 
