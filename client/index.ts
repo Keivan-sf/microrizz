@@ -49,14 +49,13 @@ async function main() {
 function createLocalSocksServer(remoteServer: Server, port: number) {
   const socketServer = net.createServer();
   socketServer.listen(port);
-  console.log("tcp server created");
   const udpServer = new UdpSocketServer(port);
-  console.log("udp server created");
   const socks_server = new LocalSocksServer(
     socketServer,
     remoteServer,
     udpServer,
   );
+  console.log(`socks server exposed at socks5://127.0.0.1:${port}`);
   return socks_server;
 }
 

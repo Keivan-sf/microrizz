@@ -18,10 +18,6 @@ export class UdpSocketServer {
   private address_to_task: Map<string, UdpTask> = new Map();
   constructor(port: number) {
     this.socket = dgram.createSocket({ type: "udp4", reuseAddr: true });
-    console.log("trying to reuse udp port");
-    this.socket.on("listening", () => {
-      console.log("socket actually reused the port!", port);
-    });
     this.socket.bind(port);
     this.socket.on("message", (data, info) => {
       const key = `${info.address}:${info.port}`;
