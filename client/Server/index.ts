@@ -1,9 +1,11 @@
 import { Connection, Task } from "../utils/interfaces";
 import TaskManager from "../utils/TaskManager";
+import { ActivityTimeout } from "./ActivityTimeout";
 
 const COMMANDS = {
   AUTH: 128,
   NEW_TASK: 129,
+  HEART_BEAT: 255,
   // less than 128 commands are task specific
   CONNECT: 1,
   DATA: 2,
@@ -34,7 +36,10 @@ export class Server {
   private task_connect_promise: Map<number, TaskPromise<Buffer>> = new Map();
   private task_udp_promise: Map<number, TaskPromise<void>> = new Map();
 
-  constructor(public connection: Connection) { }
+  constructor(
+    public connection: Connection,
+    private heart_beat_interval: number = 2000,
+  ) { }
 
   public authenticate(uname: string, pw: string) {
     if (this.state != "none") {
@@ -52,6 +57,7 @@ export class Server {
   }
 
   public start() {
+    this.keepAlive();
     this.connection.on("data", (data: Buffer) => {
       if (data.at(0) == COMMANDS.AUTH && this.state == "auth") {
         this.state = "ready";
@@ -217,5 +223,11 @@ export class Server {
     b.writeUIntBE(tid, 1, 2);
     if (!body) return b;
     return Buffer.concat([b, body]);
+  }
+
+  private keepAlive() {
+    setInterval(() => {
+      this.connection.write(Buffer.from([COMMANDS.HEART_BEAT]));
+    }, this.heart_beat_interval);
   }
 }

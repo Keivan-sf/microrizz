@@ -4,6 +4,7 @@ import * as utils from "./utils";
 import dgram from "dgram";
 
 const COMMANDS = {
+  HEART_BEAT: 255,
   AUTH: 128,
   NEW_TASK: 129,
   // less than 128 commands are task specific
@@ -37,7 +38,9 @@ export class Client {
   constructor(
     public connection: Connection,
     private timeout: number,
+    private heart_beat_interval: number = 2000,
   ) {
+    this.keepAlive();
     setInterval(() => {
       console.log("number of stored tasks", this.tasks.size);
     }, 10000);
@@ -62,6 +65,12 @@ export class Client {
         }
       }
     });
+  }
+
+  private keepAlive() {
+    setInterval(() => {
+      this.connection.write(Buffer.from([COMMANDS.HEART_BEAT]));
+    }, this.heart_beat_interval);
   }
 
   private handleTaskSpecificCommand(data: Buffer) {
