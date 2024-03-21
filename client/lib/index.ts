@@ -6,15 +6,19 @@ import { LocalSocksServer } from "./Socket";
 import net from "net";
 import { UdpSocketServer } from "./Socket/udpServer";
 const SERVER = process.argv[2];
-const LOCAL_PORT = 9091;
 if (!SERVER) {
   console.log("Server address is needed");
   process.exit(1);
 }
 
-export async function start() {
+export async function start(opts: {
+  server: string;
+  username: string;
+  password: string;
+  localScocksPort: number;
+}) {
   while (true) {
-    const ws = new WebSocket(SERVER);
+    const ws = new WebSocket(opts.server);
     try {
       let is_rejected = false;
       await new Promise(async (resolve, reject) => {
@@ -28,9 +32,12 @@ export async function start() {
             closeConnections(wsConnection, socks_server);
           });
           server.start();
-          server.authenticate("admin", "adminpw");
+          server.authenticate(opts.username, opts.username);
 
-          const socks_server = createLocalSocksServer(server, LOCAL_PORT);
+          const socks_server = createLocalSocksServer(
+            server,
+            opts.localScocksPort,
+          );
           callOnConnectionClosure(wsConnection, () => {
             if (!is_rejected) reject();
             is_rejected = true;
@@ -97,4 +104,3 @@ function closeConnections(ws: WSConnection, socks_server: LocalSocksServer) {
     socks_server.destroy();
   } catch (err) {}
 }
-
