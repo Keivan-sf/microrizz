@@ -32,7 +32,7 @@ export async function start(opts: {
             closeConnections(wsConnection, socks_server);
           });
           server.start();
-          server.authenticate(opts.username, opts.username);
+          server.authenticate(opts.username, opts.password);
 
           const socks_server = createLocalSocksServer(
             server,
