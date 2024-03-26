@@ -48,6 +48,7 @@ export async function start(opts: {
         }
       });
     } catch (err) {
+      console.log(err);
       await sleep(2000);
     }
   }
