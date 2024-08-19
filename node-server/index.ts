@@ -5,7 +5,7 @@ import { Client } from "./Handler/handler";
 import { NetworkImbalancer } from "./Utils/NetworkImbalancer";
 import { config } from "dotenv";
 config();
-const PORT = process.env.PORT;
+const PORT = process.env.PORT ?? 3000;
 const TIME_OUT = 15000;
 
 export const startServer = () => {
