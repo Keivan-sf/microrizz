@@ -23,5 +23,6 @@
   "devDependencies": {
     "@types/yargs": "^17.0.32",
     "shx": "^0.3.4"
-  }
+  },
+  "packageManager": "pnpm@9.1.0+sha1.217063ce3fcbf44f3051666f38b810f1ddefee4a"
 }

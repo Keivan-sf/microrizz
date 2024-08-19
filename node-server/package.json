@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@chabokan.net/cli": "^0.8.9",
     "@types/express": "^4.17.21",
     "@types/node": "^20.11.16",
     "@types/ws": "^8.5.10",
@@ -21,5 +22,6 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3",
     "ws": "^8.16.0"
-  }
+  },
+  "packageManager": "pnpm@9.1.0+sha1.217063ce3fcbf44f3051666f38b810f1ddefee4a"
 }
