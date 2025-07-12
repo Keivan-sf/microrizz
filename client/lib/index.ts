@@ -5,6 +5,7 @@ import { Server } from "./Server/index";
 import { LocalSocksServer } from "./Socket";
 import net from "net";
 import { UdpSocketServer } from "./Socket/udpServer";
+import { WRTCClient } from "./utils/WRTC";
 const SERVER = process.argv[2];
 if (!SERVER) {
   console.log("Server address is needed");
@@ -19,6 +20,10 @@ export async function start(opts: {
 }) {
   while (true) {
     const ws = new WebSocket(opts.server);
+    // const webRTC = opts.server;
+    const wrtc_client = new WRTCClient(opts.server);
+    await wrtc_client.connect();
+    return;
     try {
       let is_rejected = false;
       await new Promise(async (resolve, reject) => {

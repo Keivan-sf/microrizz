@@ -39,11 +39,17 @@ export class WRTCClient implements Connection {
   }
 
   private async connectToSever() {
-    console.log("signalling_endpoint:", this.signalling_endpoint);
     const initation_url = joinURLPaths(this.signalling_endpoint, "/initiate");
-    console.log("initation_url:", initation_url);
     const initiation_req = await axios.get(initation_url);
     this.id = +initiation_req.data.id;
+    console.log("initiated webrtc negotiations");
+
+    console.log("creating offer");
+    const offer = await this.peer.createOffer();
+    const offer_url = joinURLPaths(this.signalling_endpoint, "/offer");
+    console.log("sending offer");
+    const offer_req = await axios.post(offer_url, { id: this.id, offer });
+    console.log("anwser:", offer_req.data);
   }
 
   public write(data: Buffer) {
