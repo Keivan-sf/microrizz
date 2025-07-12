@@ -42,6 +42,7 @@ export class WRTCClient implements Connection {
     const initation_url = joinURLPaths(this.signalling_endpoint, "/initiate");
     const initiation_req = await axios.get(initation_url);
     this.id = +initiation_req.data.id;
+    const id = +initiation_req.data.id;
     console.log("initiated webrtc negotiations");
 
     console.log("creating offer");
@@ -49,8 +50,19 @@ export class WRTCClient implements Connection {
     await this.peer.setLocalDescription(offer);
     const offer_url = joinURLPaths(this.signalling_endpoint, "/offer");
     console.log("sending offer");
-    const offer_req = await axios.post(offer_url, { id: this.id, offer });
+    const offer_req = await axios.post(offer_url, { id, offer });
     console.log("anwser:", offer_req.data);
+    await this.peer.setRemoteDescription(offer_req.data.answer);
+    console.log("remote desc set");
+
+    this.peer.onicecandidate = (ev) => {
+      if (!ev.candidate) return;
+      const ice_candidate_url = joinURLPaths(
+        this.signalling_endpoint,
+        "/ice-candidate",
+      );
+      axios.post(ice_candidate_url, { id, candidate: ev.candidate });
+    };
   }
 
   public write(data: Buffer) {
