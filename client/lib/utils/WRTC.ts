@@ -7,6 +7,7 @@ import {
 } from "@roamhq/wrtc";
 import { Connection } from "./interfaces";
 import axios from "axios";
+import { URL } from "url";
 
 export class WRTCClient implements Connection {
   private peer: RTCPeerConnection;
@@ -38,8 +39,11 @@ export class WRTCClient implements Connection {
   }
 
   private async connectToSever() {
-    const initiation_req = await axios.get("/initiate");
-    console.log("id from initation request:", initiation_req.data.id);
+    console.log("signalling_endpoint:", this.signalling_endpoint);
+    const initation_url = joinURLPaths(this.signalling_endpoint, "/initiate");
+    console.log("initation_url:", initation_url);
+    const initiation_req = await axios.get(initation_url);
+    this.id = +initiation_req.data.id;
   }
 
   public write(data: Buffer) {
@@ -83,4 +87,8 @@ export class WRTCClient implements Connection {
     }
     this.peer.close();
   }
+}
+
+function joinURLPaths(basePath: string, additionalPath: string) {
+  return basePath.replace(/\/$/, "") + "/" + additionalPath.replace(/^\//, "");
 }
