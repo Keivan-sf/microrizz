@@ -46,6 +46,7 @@ export class WRTCClient implements Connection {
 
     console.log("creating offer");
     const offer = await this.peer.createOffer();
+    await this.peer.setLocalDescription(offer);
     const offer_url = joinURLPaths(this.signalling_endpoint, "/offer");
     console.log("sending offer");
     const offer_req = await axios.post(offer_url, { id: this.id, offer });
