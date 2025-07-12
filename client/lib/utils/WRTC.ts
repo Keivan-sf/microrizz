@@ -79,13 +79,10 @@ export class WRTCClient implements Connection {
         "/get-ice-candidate",
       );
       const ice_candidates_req = await axios.post(ice_candidate_url, { id });
-      console.log(
-        "got remote candidates:",
-        ice_candidates_req.data.candidates,
-      );
-      // for (const candidate of ice_candidates_req.data.candiadtes) {
-      //   this.peer.addIceCandidate(candidate);
-      // }
+      console.log("got remote candidates:", ice_candidates_req.data.candidates);
+      for (const candidate of ice_candidates_req.data.candidates) {
+        this.peer.addIceCandidate(candidate);
+      }
     }, 1000);
   }
 
