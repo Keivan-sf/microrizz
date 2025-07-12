@@ -5,8 +5,9 @@ import {
   RTCRtpSender,
   RTCRtpTransceiver,
 } from "@roamhq/wrtc";
+import { Connection } from "../interfaces";
 
-export class WRTCClient {
+export class WRTCClient implements Connection {
   private peer: RTCPeerConnection;
   private data_channel: RTCDataChannel | null = null;
   private listeners: {
@@ -34,6 +35,12 @@ export class WRTCClient {
         if (this.listeners.onconnection) this.listeners.onconnection();
       };
     };
+  }
+
+  public write(data: Buffer) {
+    if (!this.data_channel)
+      throw new Error("Data channel does not exist for writing");
+    this.data_channel.send(data);
   }
 
   public on(type: "data", cb: (data: Buffer) => void): void;
