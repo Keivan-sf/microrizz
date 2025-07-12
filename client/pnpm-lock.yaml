@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@roamhq/wrtc':
+        specifier: ^0.9.0
+        version: 0.9.0
       '@types/node':
         specifier: ^20.11.16
         version: 20.11.16
@@ -49,6 +52,34 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
+
+  '@roamhq/wrtc-darwin-arm64@0.9.0':
+    resolution: {integrity: sha512-bVbyI3Xm3ZlTPYnKz7gnLkxt1kZ8ZMW5QBwJpF/kS227O71pqUhicX/V5RRGqUmaER3JtXt0naR86ZPDfgTQBg==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@roamhq/wrtc-darwin-x64@0.9.0':
+    resolution: {integrity: sha512-99FFbFcIIqRR+H4ylkQgbgM8L5dx72hP5/GeJHB2h2f62Mb51bi30KokyOeBKH3X5R8bNi8LKnf7tV8d4kaGlA==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@roamhq/wrtc-linux-arm64@0.9.0':
+    resolution: {integrity: sha512-JUtrPFGvp+/5YWz9L5eW9e4XPQ5lRFQR5/BlGQJQOutrkBYqvME8NvAHKhyNWm+b3Sgk0w6yZ1g1nSttPHFY6g==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@roamhq/wrtc-linux-x64@0.9.0':
+    resolution: {integrity: sha512-ve6pIqeadUn6Jypb73A76041zdvGg/Bl0JU+T2+K8Zjw4aASebBFF4NX213dAS5viWUcNULzKV/s2PcpLDCyXQ==}
+    cpu: [x64]
+    os: [linux]
+
+  '@roamhq/wrtc-win32-x64@0.9.0':
+    resolution: {integrity: sha512-QoVe5KKP1IjIRGDZfMUJV0OgTCK3noc79P2uuLeR5iJqf+bLcgyNr818ljB7frxPMSZNwWC5eVQTGmclrIIOIg==}
+    cpu: [x64]
+    os: [win32]
+
+  '@roamhq/wrtc@0.9.0':
+    resolution: {integrity: sha512-b61ld6g0hHDh/K1y0Lckxg5HBunaESNW6N23ewviW5IvwBfZiIYPUxQFWxqprMTr/6ODHmw5B2xvqvLyuAL5Xw==}
 
   '@tsconfig/node10@1.0.9':
     resolution: {integrity: sha512-jNsYVVxU8v5g43Erja32laIDHXeoNvFEpX33OK4d6hljo3jDhCBDhx5dhCCTMWUojscpAagGiRkBKxpdl9fxqA==}
@@ -120,6 +151,11 @@ packages:
   diff@4.0.2:
     resolution: {integrity: sha512-58lmxKSA4BNyLz+HHMUzlOEpg09FV+ev6ZMe3vJihgdxzgcwZ8VoEEPmALCZG9LmqfVoNMMKpttIYTVG6uDY7A==}
     engines: {node: '>=0.3.1'}
+
+  domexception@4.0.0:
+    resolution: {integrity: sha512-A2is4PLG+eeSfoTMA95/s4pvAoSo2mKtiM5jlHkAVewmiO8ISFTFKZjH7UAM1Atli/OT/7JHOrJRJiMKUZKYBw==}
+    engines: {node: '>=12'}
+    deprecated: Use your platform's native DOMException instead
 
   emoji-regex@8.0.0:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
@@ -240,6 +276,10 @@ packages:
   v8-compile-cache-lib@3.0.1:
     resolution: {integrity: sha512-wa7YjyUGfNZngI/vtK0UHAN+lgDCxBPCylVXGp0zu59Fz5aiGtNXaq3DhIov063MorB+VfufLh3JlF2KdTK3xg==}
 
+  webidl-conversions@7.0.0:
+    resolution: {integrity: sha512-VwddBukDzu71offAQR975unBIGqfKZpM+8ZX6ySk8nYhVoo5CYaZyzt3YBvYtRtO+aoGlqxPg/B87NGVZ/fu6g==}
+    engines: {node: '>=12'}
+
   wrap-ansi@7.0.0:
     resolution: {integrity: sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==}
     engines: {node: '>=10'}
@@ -289,6 +329,30 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.1
       '@jridgewell/sourcemap-codec': 1.4.15
+
+  '@roamhq/wrtc-darwin-arm64@0.9.0':
+    optional: true
+
+  '@roamhq/wrtc-darwin-x64@0.9.0':
+    optional: true
+
+  '@roamhq/wrtc-linux-arm64@0.9.0':
+    optional: true
+
+  '@roamhq/wrtc-linux-x64@0.9.0':
+    optional: true
+
+  '@roamhq/wrtc-win32-x64@0.9.0':
+    optional: true
+
+  '@roamhq/wrtc@0.9.0':
+    optionalDependencies:
+      '@roamhq/wrtc-darwin-arm64': 0.9.0
+      '@roamhq/wrtc-darwin-x64': 0.9.0
+      '@roamhq/wrtc-linux-arm64': 0.9.0
+      '@roamhq/wrtc-linux-x64': 0.9.0
+      '@roamhq/wrtc-win32-x64': 0.9.0
+      domexception: 4.0.0
 
   '@tsconfig/node10@1.0.9': {}
 
@@ -348,6 +412,11 @@ snapshots:
   create-require@1.1.1: {}
 
   diff@4.0.2: {}
+
+  domexception@4.0.0:
+    dependencies:
+      webidl-conversions: 7.0.0
+    optional: true
 
   emoji-regex@8.0.0: {}
 
@@ -461,6 +530,9 @@ snapshots:
   undici-types@5.26.5: {}
 
   v8-compile-cache-lib@3.0.1: {}
+
+  webidl-conversions@7.0.0:
+    optional: true
 
   wrap-ansi@7.0.0:
     dependencies:
