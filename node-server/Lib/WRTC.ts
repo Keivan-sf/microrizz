@@ -89,6 +89,7 @@ export class WRTCClient implements Connection {
   public async getAnswer(offer: any) {
     await this.peer.setRemoteDescription(offer);
     const answer = await this.peer.createAnswer();
+    this.peer.setLocalDescription(answer);
     return answer;
   }
 
