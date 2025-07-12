@@ -6,6 +6,7 @@ import { LocalSocksServer } from "./Socket";
 import net from "net";
 import { UdpSocketServer } from "./Socket/udpServer";
 import { WRTCClient } from "./utils/WRTC";
+import { Connection } from "./utils/interfaces";
 const SERVER = process.argv[2];
 if (!SERVER) {
   console.log("Server address is needed");
@@ -19,22 +20,21 @@ export async function start(opts: {
   localScocksPort: number;
 }) {
   while (true) {
-    const ws = new WebSocket(opts.server);
+    // const ws = new WebSocket(opts.server);
     // const webRTC = opts.server;
     const wrtc_client = new WRTCClient(opts.server);
-    await wrtc_client.connect();
-    return;
     try {
       let is_rejected = false;
       await new Promise(async (resolve, reject) => {
         try {
-          await waitForConnctionEstablishment(ws);
-
-          const wsConnection = new WSConnection(ws);
-          const server = new Server(wsConnection, () => {
+          // await waitForConnctionEstablishment(ws);
+          // const wsConnection = new WSConnection(ws);
+          await wrtc_client.connect();
+          let connection: Connection = wrtc_client;
+          const server = new Server(connection, () => {
             if (!is_rejected) reject();
             is_rejected = true;
-            closeConnections(wsConnection, socks_server);
+            closeConnections(connection, socks_server);
           });
           server.start();
           server.authenticate(opts.username, opts.password);
@@ -43,10 +43,10 @@ export async function start(opts: {
             server,
             opts.localScocksPort,
           );
-          callOnConnectionClosure(wsConnection, () => {
+          callOnConnectionClosure(connection, () => {
             if (!is_rejected) reject();
             is_rejected = true;
-            closeConnections(wsConnection, socks_server);
+            closeConnections(connection, socks_server);
           });
         } catch (err) {
           reject(err);
@@ -95,7 +95,7 @@ async function waitForConnctionEstablishment(ws: WebSocket) {
   });
 }
 
-function callOnConnectionClosure(ws: WSConnection, cb: () => void): void {
+function callOnConnectionClosure(ws: Connection, cb: () => void): void {
   ws.on("close", () => {
     cb();
   });
@@ -104,7 +104,7 @@ function callOnConnectionClosure(ws: WSConnection, cb: () => void): void {
   });
 }
 
-function closeConnections(ws: WSConnection, socks_server: LocalSocksServer) {
+function closeConnections(ws: Connection, socks_server: LocalSocksServer) {
   try {
     ws.close();
     socks_server.destroy();

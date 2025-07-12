@@ -9,12 +9,20 @@ config();
 const PORT = process.env.PORT ?? 3000;
 const TIME_OUT = 15000;
 
+function handle_wrtc_connection(client: WRTCClient) {
+  client.on("connection", () => {
+    new Client(client, TIME_OUT);
+  });
+}
+
 function routeWRTC(router: Router) {
   let id_counter = 0;
   const wrtcClients: WRTCClient[] = [];
   router.get("/initiate", (req, res) => {
     const id = ++id_counter;
-    wrtcClients.push(new WRTCClient(id));
+    const client = new WRTCClient(id);
+    handle_wrtc_connection(client);
+    wrtcClients.push(client);
     res.send({ id });
   });
   router.post("/offer", async (req, res) => {
@@ -44,7 +52,7 @@ function routeWRTC(router: Router) {
       res.send({ msg: `no client found with id ${req.body.id}` });
       return;
     }
-    console.log("added new candidate from client")
+    console.log("added new candidate from client");
     client.addCandidate(req.body.candidate);
     res.sendStatus(200);
   });
