@@ -86,4 +86,8 @@ export class WRTCClient implements Connection {
     const answer = await this.peer.createAnswer();
     return answer;
   }
+
+  public addCandidate(ice: RTCIceCandidateInit) {
+    this.peer.addIceCandidate(ice);
+  }
 }
