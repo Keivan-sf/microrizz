@@ -13,6 +13,7 @@ export class WRTCClient implements Connection {
   private peer: RTCPeerConnection;
   private data_channel: RTCDataChannel;
   private id: null | number = null;
+  private ice_candidate_interval: NodeJS.Timeout | null = null;
   constructor(private signalling_endpoint: string) {
     this.peer = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
@@ -32,6 +33,13 @@ export class WRTCClient implements Connection {
         );
         if (this.peer.connectionState === "connected") {
           resolve();
+          setTimeout(() => {
+            if (!this.ice_candidate_interval) return;
+            console.log(
+              "deleting ice candidate getter interval, no more polling",
+            );
+            clearInterval(this.ice_candidate_interval);
+          }, 2200);
         }
       });
       this.connectToSever().catch((err) => reject(err));
@@ -59,10 +67,26 @@ export class WRTCClient implements Connection {
       if (!ev.candidate) return;
       const ice_candidate_url = joinURLPaths(
         this.signalling_endpoint,
-        "/ice-candidate",
+        "/send-ice-candidate",
       );
       axios.post(ice_candidate_url, { id, candidate: ev.candidate });
     };
+
+    this.ice_candidate_interval = setInterval(async () => {
+      console.log("polling for more ice candidates");
+      const ice_candidate_url = joinURLPaths(
+        this.signalling_endpoint,
+        "/get-ice-candidate",
+      );
+      const ice_candidates_req = await axios.post(ice_candidate_url, { id });
+      console.log(
+        "got remote candidates:",
+        ice_candidates_req.data.candidates,
+      );
+      // for (const candidate of ice_candidates_req.data.candiadtes) {
+      //   this.peer.addIceCandidate(candidate);
+      // }
+    }, 1000);
   }
 
   public write(data: Buffer) {
