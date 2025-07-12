@@ -4,17 +4,30 @@ import { WSConnection } from "./connection";
 import { Client } from "./Handler/handler";
 import { NetworkImbalancer } from "./Utils/NetworkImbalancer";
 import { config } from "dotenv";
+import { WRTCClient } from "./Lib/WRTC";
 config();
 const PORT = process.env.PORT ?? 3000;
 const TIME_OUT = 15000;
 
 function routeWRTC(router: Router) {
   let id_counter = 0;
-  const wrtcClients = [];
+  const wrtcClients: WRTCClient[] = [];
   router.get("/initiate", (req, res) => {
-    res.send({ id: ++id_counter });
+    const id = ++id_counter;
+    wrtcClients.push(new WRTCClient(id));
+    res.send({ id });
   });
-  router.post("/offer", (req, res) => {});
+  router.post("/offer", async (req, res) => {
+    const client = wrtcClients.find((w) => w.id == req.body.id);
+    if (!client) {
+      res.statusCode = 400;
+      res.send({ msg: `no client found with id ${req.body.id}` });
+      return;
+    }
+    console.log("offer:", req.body);
+    const answer = await client.getAnswer(req.body.offer);
+    res.send({ id: req.body.id, answer });
+  });
   router.get("/ice-candidate", (req, res) => {});
   router.post("/ice-candidate", (req, res) => {});
 }
