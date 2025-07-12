@@ -96,7 +96,7 @@ export class WRTCClient implements Connection {
   public on(type: "connection", cb: () => void): void;
   public on(type: any, cb: any) {
     if (type == "data") {
-      this.data_channel.onmessage = (ev) => cb(ev.data);
+      this.data_channel.onmessage = (ev) => cb(Buffer.from(ev.data));
     } else if (type == "close") {
       this.data_channel.onclose = () => cb();
     } else if (type == "error") {
