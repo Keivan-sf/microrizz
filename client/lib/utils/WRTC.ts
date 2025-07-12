@@ -6,17 +6,40 @@ import {
   RTCRtpTransceiver,
 } from "@roamhq/wrtc";
 import { Connection } from "./interfaces";
+import axios from "axios";
 
 export class WRTCClient implements Connection {
   private peer: RTCPeerConnection;
   private data_channel: RTCDataChannel;
-  constructor(private signallingServer: string) {
+  private id: null | number = null;
+  constructor(private signalling_endpoint: string) {
     this.peer = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
     this.data_channel = this.peer.createDataChannel("channel", {
       ordered: true,
     });
+  }
+
+  public async connect(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.peer.addEventListener("connectionstatechange", (event) => {
+        console.log(
+          "connection state changed:",
+          this.peer.connectionState,
+          this.peer,
+        );
+        if (this.peer.connectionState === "connected") {
+          resolve();
+        }
+      });
+      this.connectToSever().catch((err) => reject(err));
+    });
+  }
+
+  private async connectToSever() {
+    const initiation_req = await axios.get("/initiate");
+    console.log("id from initation request:", initiation_req.data.id);
   }
 
   public write(data: Buffer) {
