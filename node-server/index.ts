@@ -28,16 +28,25 @@ function routeWRTC(router: Router) {
     const answer = await client.getAnswer(req.body.offer);
     res.send({ id: req.body.id, answer });
   });
-  router.get("/ice-candidate", (req, res) => {});
-  router.post("/ice-candidate", (req, res) => {
+  router.post("/get-ice-candidate", (req, res) => {
     const client = wrtcClients.find((w) => w.id == req.body.id);
     if (!client) {
       res.statusCode = 400;
       res.send({ msg: `no client found with id ${req.body.id}` });
       return;
     }
+    res.send({ id: client.id, candidates: client.getIceCandidates() });
+  });
+  router.post("/send-ice-candidate", (req, res) => {
+    const client = wrtcClients.find((w) => w.id == req.body.id);
+    if (!client) {
+      res.statusCode = 400;
+      res.send({ msg: `no client found with id ${req.body.id}` });
+      return;
+    }
+    console.log("added new candidate from client")
     client.addCandidate(req.body.candidate);
-    res.send(200);
+    res.sendStatus(200);
   });
 }
 
