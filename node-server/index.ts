@@ -21,6 +21,7 @@ function routeWRTC(router: Router) {
 
 export const startServer = () => {
   const app = express();
+  app.use(express.json());
   app.get("/", (req, res) => {
     res.send("<html><h4>Work in progress...</h4></br>Coming soon</html>");
   });
