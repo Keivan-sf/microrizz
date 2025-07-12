@@ -24,7 +24,7 @@ export class WRTCClient implements Connection {
     this.peer.ondatachannel = (e) => {
       this.data_channel = e.channel;
       this.data_channel.onmessage = (ev) => {
-        if (this.listeners.ondata) this.listeners.ondata(ev.data);
+        if (this.listeners.ondata) this.listeners.ondata(Buffer.from(ev.data));
       };
       this.data_channel.onclose = () => {
         if (this.listeners.onclose) this.listeners.onclose();
