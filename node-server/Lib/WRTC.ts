@@ -8,6 +8,7 @@ import {
 import { Connection } from "../interfaces";
 
 export class WRTCClient implements Connection {
+  private ice_candidate_buffer: RTCIceCandidateInit[] = [];
   private peer: RTCPeerConnection;
   private data_channel: RTCDataChannel | null = null;
   private listeners: {
@@ -34,6 +35,10 @@ export class WRTCClient implements Connection {
       this.data_channel.onopen = () => {
         if (this.listeners.onconnection) this.listeners.onconnection();
       };
+    };
+    this.peer.onicecandidate = (ev) => {
+      if (!ev.candidate) return;
+      this.ice_candidate_buffer.push(ev.candidate);
     };
   }
 
@@ -89,5 +94,11 @@ export class WRTCClient implements Connection {
 
   public addCandidate(ice: RTCIceCandidateInit) {
     this.peer.addIceCandidate(ice);
+  }
+
+  public getIceCandidates(): RTCIceCandidateInit[] {
+    const candidates = this.ice_candidate_buffer;
+    this.ice_candidate_buffer = [];
+    return candidates;
   }
 }
