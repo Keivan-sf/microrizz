@@ -40,8 +40,3 @@ Options:
                             [string] [required] [choices: "websocket", "webrtc"]
   --socks-port  Local socks port to be exposed          [number] [default: 9091]
 ```
-### Todo
-
-- Support more languages as server
-- Fix server username password authentication
-- Support custom server username password specification
