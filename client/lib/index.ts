@@ -1,5 +1,5 @@
 import { WebSocket } from "ws";
-import { WSConnection } from "./utils/Connection";
+import { WSConnection } from "./utils/WS";
 import { sleep } from "./utils/sleep";
 import { Server } from "./Server/index";
 import { LocalSocksServer } from "./Socket";
@@ -17,20 +17,18 @@ export async function start(opts: {
   server: string;
   username: string;
   password: string;
+  protocol: "websocket" | "webrtc";
   localScocksPort: number;
 }) {
   while (true) {
-    // const ws = new WebSocket(opts.server);
-    // const webRTC = opts.server;
-    const wrtc_client = new WRTCClient(opts.server);
     try {
       let is_rejected = false;
       await new Promise(async (resolve, reject) => {
         try {
-          // await waitForConnctionEstablishment(ws);
-          // const wsConnection = new WSConnection(ws);
-          await wrtc_client.connect();
-          let connection: Connection = wrtc_client;
+          const connection: Connection = await getConnection(
+            opts.protocol,
+            opts.server,
+          );
           const server = new Server(connection, () => {
             if (!is_rejected) reject();
             is_rejected = true;
@@ -95,18 +93,37 @@ async function waitForConnctionEstablishment(ws: WebSocket) {
   });
 }
 
-function callOnConnectionClosure(ws: Connection, cb: () => void): void {
-  ws.on("close", () => {
+function callOnConnectionClosure(connection: Connection, cb: () => void): void {
+  connection.on("close", () => {
     cb();
   });
-  ws.on("error", () => {
+  connection.on("error", () => {
     cb();
   });
 }
 
-function closeConnections(ws: Connection, socks_server: LocalSocksServer) {
+function closeConnections(
+  connection: Connection,
+  socks_server: LocalSocksServer,
+) {
   try {
-    ws.close();
+    connection.close();
     socks_server.destroy();
   } catch (err) {}
+}
+
+async function getConnection(
+  protocol: "websocket" | "webrtc",
+  uri: string,
+): Promise<Connection> {
+  if (protocol == "websocket") {
+    const ws = new WebSocket(uri);
+    await waitForConnctionEstablishment(ws);
+    const wsConnection = new WSConnection(ws);
+    return wsConnection;
+  } else {
+    const wrtc_client = new WRTCClient(uri);
+    await wrtc_client.connect();
+    return wrtc_client;
+  }
 }

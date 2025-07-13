@@ -19,6 +19,13 @@ yargs(hideBin(process.argv))
         type: "string",
         description: "Used for authentication",
       });
+      y.option("protocol", {
+        require: true,
+        requiresArg: true,
+        type: "string",
+        description:
+          "Protocol used to communicate with the server: `websocket` | `webrtc`",
+      });
       y.option("socks-port", {
         requiresArg: false,
         type: "number",
@@ -42,6 +49,7 @@ yargs(hideBin(process.argv))
         localScocksPort: args["socks-port"],
         username: args["username"],
         password: args["password"],
+        protocol: args["protocol"],
       });
     },
   )
