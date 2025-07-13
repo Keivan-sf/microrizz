@@ -9,18 +9,15 @@ yargs(hideBin(process.argv))
     "Connects to the remote server",
     (y) => {
       y.version(false);
-      y.option("username", {
+      y.option("protocol", {
+        require: true,
         requiresArg: true,
         type: "string",
-        description: "Used for authentication",
-      });
-      y.option("password", {
-        requiresArg: true,
-        type: "string",
-        description: "Used for authentication",
+        choices: ["websocket", "webrtc"],
+        description: "Used to communicate with server",
       });
       y.option("socks-port", {
-        requiresArg: false,
+        requiresArg: true,
         type: "number",
         description: "Local socks port to be exposed",
         default: 9091,
@@ -40,8 +37,9 @@ yargs(hideBin(process.argv))
       lib.start({
         server: args["server-uri"],
         localScocksPort: args["socks-port"],
-        username: args["username"],
-        password: args["password"],
+        username: "admin",
+        password: "adminpw",
+        protocol: args["protocol"],
       });
     },
   )
