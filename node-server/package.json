@@ -19,12 +19,12 @@
     "express": "^5.1.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3",
-    "ws": "^8.16.0"
+    "ws": "^8.18.3"
   },
   "packageManager": "pnpm@9.1.0+sha1.217063ce3fcbf44f3051666f38b810f1ddefee4a",
   "devDependencies": {
     "@types/express": "^5.0.3",
     "@types/node": "^20.11.16",
-    "@types/ws": "^8.5.10"
+    "@types/ws": "^8.18.1"
   }
 }
