@@ -17,7 +17,7 @@ yargs(hideBin(process.argv))
         description: "Used to communicate with server",
       });
       y.option("socks-port", {
-        requiresArg: false,
+        requiresArg: true,
         type: "number",
         description: "Local socks port to be exposed",
         default: 9091,
