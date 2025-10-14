@@ -18,7 +18,7 @@ You need NodeJs on your client machine
 Navigate to `client` directory and expose a local proxy server like below:
 
 ```
-pnpm start:dev -- run ws://remote_host:remote_port --protocol websocket
+pnpm start:dev -- run wss://remote_host:remote_port --protocol websocket
 ```
 
 - Notice you need to change `wss` to `ws` if your remote server doesn't have SSL
