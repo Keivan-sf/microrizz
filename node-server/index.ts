@@ -8,6 +8,7 @@ import { WRTCClient } from "./Lib/WRTC";
 import { Readable, Writable } from "stream";
 import { sleep } from "./Utils/sleep";
 import { HTTPConnection } from "./Lib/HTTP";
+import { CHACHAEncryptionWrapper } from "./Lib/chacha-encryption";
 config();
 const PORT = process.env.PORT ?? 3000;
 const TIME_OUT = 15000;
@@ -68,7 +69,19 @@ export const routeHttpStreaming = (router: Router) => {
     client_counter++;
     const end_point = `client-${client_counter}`;
     const http_connection = new HTTPConnection(router, end_point);
-    new Client(http_connection, TIME_OUT);
+    const key = Buffer.from([
+      0x60, 0xd3, 0x87, 0x06, 0xd0, 0xc3, 0x65, 0xfe, 0x92, 0x59, 0xba, 0x20,
+      0x11, 0xd9, 0xbc, 0x04, 0xc0, 0xa1, 0xb0, 0x8d, 0xc4, 0x4a, 0x3e, 0xc9,
+      0x1f, 0x2e, 0x2d, 0x9d, 0xb6, 0x20, 0x44, 0x0b,
+    ]);
+
+    const encrypted_connection = new CHACHAEncryptionWrapper(
+      http_connection,
+      key,
+      { key_size: 32, nounce_size: 12, tag_size: 16 },
+    );
+
+    new Client(encrypted_connection, TIME_OUT);
     res.send({ end_point });
   });
 };
