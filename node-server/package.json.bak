@@ -4,10 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "npx tsc",
-    "start": "node ./.dist/index.js",
-    "compile": "esbuild index.ts --bundle --platform=node --outfile=.singular/index.js",
-    "compile:tsup": "tsup index.ts --format cjs --out-dir .tsup",
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -23,7 +20,6 @@
     "typescript": "^5.3.3",
     "ws": "^8.18.3"
   },
-  "packageManager": "pnpm@9.1.0+sha1.217063ce3fcbf44f3051666f38b810f1ddefee4a",
   "devDependencies": {
     "@types/express": "^5.0.3",
     "@types/node": "^20.11.16",

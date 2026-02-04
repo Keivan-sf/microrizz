@@ -5,6 +5,8 @@ import { Client } from "./Handler/handler";
 import { NetworkImbalancer } from "./Utils/NetworkImbalancer";
 import { config } from "dotenv";
 import { WRTCClient } from "./Lib/WRTC";
+import { Readable, Writable } from "stream";
+import { sleep } from "./Utils/sleep";
 config();
 const PORT = process.env.PORT ?? 3000;
 const TIME_OUT = 15000;
@@ -58,15 +60,55 @@ function routeWRTC(router: Router) {
   });
 }
 
+export const routeHttpStreaming = (router: Router) => {
+  router.post("/data", (req, res) => {
+    res.setHeader("Content-Type", "text/plain");
+    res.setHeader("Transfer-Encoding", "chunked");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+
+    console.log("sir are we even here 1?");
+    req.on("data", (data: Buffer) => {
+      console.log("data:", data);
+    });
+    let finished_streams = 0;
+    console.log("sir are we even here");
+    req.once("end", () => {
+      finished_streams++;
+      if (finished_streams == 2) {
+        res.end();
+      }
+    });
+
+    (async () => {
+      console.log("inside the async function");
+      for (let i = 0; i < 5; i++) {
+        await sleep(2000);
+        const date_now = new Date().toISOString();
+        res.write(date_now);
+        console.log("wrote", date_now);
+      }
+      finished_streams++;
+      if (finished_streams == 2) {
+        res.end();
+      }
+    })();
+  });
+};
+
 export const startServer = () => {
   const app = express();
-  app.use(express.json());
   app.get("/", (req, res) => {
     res.send("<html><h4>Work in progress...</h4></br>Coming soon</html>");
   });
   const wrtc_router = express.Router();
+  wrtc_router.use(express.json());
   routeWRTC(wrtc_router);
   app.use("/webrtc", wrtc_router);
+
+  const httpStreamingRouter = express.Router();
+  routeHttpStreaming(httpStreamingRouter);
+  app.use("/http", httpStreamingRouter);
+
   const server2 = app.listen(PORT);
   const wss = new WebSocketServer({ server: server2 });
   wss.on("connection", (ws) => {
