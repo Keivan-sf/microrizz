@@ -7,6 +7,7 @@ import { config } from "dotenv";
 import { WRTCClient } from "./Lib/WRTC";
 import { Readable, Writable } from "stream";
 import { sleep } from "./Utils/sleep";
+import { HTTPConnection } from "./Lib/HTTP";
 config();
 const PORT = process.env.PORT ?? 3000;
 const TIME_OUT = 15000;
@@ -61,37 +62,15 @@ function routeWRTC(router: Router) {
 }
 
 export const routeHttpStreaming = (router: Router) => {
-  router.post("/data", (req, res) => {
-    res.setHeader("Content-Type", "text/plain");
-    res.setHeader("Transfer-Encoding", "chunked");
-    res.setHeader("X-Content-Type-Options", "nosniff");
-
-    console.log("sir are we even here 1?");
-    req.on("data", (data: Buffer) => {
-      console.log("data:", data);
-    });
-    let finished_streams = 0;
-    console.log("sir are we even here");
-    req.once("end", () => {
-      finished_streams++;
-      if (finished_streams == 2) {
-        res.end();
-      }
-    });
-
-    (async () => {
-      console.log("inside the async function");
-      for (let i = 0; i < 5; i++) {
-        await sleep(2000);
-        const date_now = new Date().toISOString();
-        res.write(date_now);
-        console.log("wrote", date_now);
-      }
-      finished_streams++;
-      if (finished_streams == 2) {
-        res.end();
-      }
-    })();
+  let client_counter = 1;
+  router.post("/initiate", (req, res) => {
+    client_counter++;
+    const http_connection = new HTTPConnection(
+      router,
+      `client-${client_counter}`,
+    );
+    new Client(http_connection, TIME_OUT);
+    res.send({ id: client_counter });
   });
 };
 
