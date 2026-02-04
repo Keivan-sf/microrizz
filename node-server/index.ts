@@ -63,16 +63,14 @@ function routeWRTC(router: Router) {
 
 export const routeHttpStreaming = (router: Router) => {
   let client_counter = 1;
-  const http_connection = new HTTPConnection(router, "/data");
-  new Client(http_connection, TIME_OUT);
 
-  // router.post("/initiate", (req, res) => {
-  //   client_counter++;
-  //   const end_point = `client-${client_counter}`;
-  //   const http_connection = new HTTPConnection(router, end_point);
-  //   new Client(http_connection, TIME_OUT);
-  //   res.send({ end_point });
-  // });
+  router.post("/initiate", (req, res) => {
+    client_counter++;
+    const end_point = `client-${client_counter}`;
+    const http_connection = new HTTPConnection(router, end_point);
+    new Client(http_connection, TIME_OUT);
+    res.send({ end_point });
+  });
 };
 
 export const startServer = () => {

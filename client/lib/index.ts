@@ -129,9 +129,8 @@ async function getConnection(
     await wrtc_client.connect();
     return wrtc_client;
   } else {
-    // const endpoint_req = await axios.post(joinURLPaths(uri, "http/initiate"));
-    // const end_point = endpoint_req.data.end_point;
-    const end_point = "data";
+    const endpoint_req = await axios.post(joinURLPaths(uri, "http/initiate"));
+    const end_point = endpoint_req.data.end_point;
     const httpConnection = new HTTPConnection(
       joinURLPaths(uri, `http/${end_point}`),
     );

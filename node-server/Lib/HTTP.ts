@@ -7,7 +7,7 @@ export class HTTPConnection implements Connection {
   private req?: Request;
   private res?: Response;
   constructor(router: Router, end_point: string) {
-    router.post(end_point, (req, res) => {
+    router.post(`/${end_point}`, (req, res) => {
       this.req = req;
       this.res = res;
       this.req.on("data", (data: Buffer) => {
