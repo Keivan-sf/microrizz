@@ -7,6 +7,9 @@ import net from "net";
 import { UdpSocketServer } from "./Socket/udpServer";
 import { WRTCClient } from "./utils/WRTC";
 import { Connection } from "./utils/interfaces";
+import axios from "axios";
+import { joinURLPaths } from "./utils/url";
+import { HTTPConnection } from "./utils/HTTP";
 const SERVER = process.argv[2];
 if (!SERVER) {
   console.log("Server address is needed");
@@ -17,7 +20,7 @@ export async function start(opts: {
   server: string;
   username: string;
   password: string;
-  protocol: "websocket" | "webrtc";
+  protocol: "websocket" | "webrtc" | "http";
   localScocksPort: number;
 }) {
   while (true) {
@@ -113,7 +116,7 @@ function closeConnections(
 }
 
 async function getConnection(
-  protocol: "websocket" | "webrtc",
+  protocol: "websocket" | "webrtc" | "http",
   uri: string,
 ): Promise<Connection> {
   if (protocol == "websocket") {
@@ -121,9 +124,17 @@ async function getConnection(
     await waitForConnctionEstablishment(ws);
     const wsConnection = new WSConnection(ws);
     return wsConnection;
-  } else {
+  } else if (protocol == "webrtc") {
     const wrtc_client = new WRTCClient(uri);
     await wrtc_client.connect();
     return wrtc_client;
+  } else {
+    // const endpoint_req = await axios.post(joinURLPaths(uri, "http/initiate"));
+    // const end_point = endpoint_req.data.end_point;
+    const end_point = "data";
+    const httpConnection = new HTTPConnection(
+      joinURLPaths(uri, `http/${end_point}`),
+    );
+    return httpConnection;
   }
 }

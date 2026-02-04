@@ -13,7 +13,7 @@ yargs(hideBin(process.argv))
         require: true,
         requiresArg: true,
         type: "string",
-        choices: ["websocket", "webrtc"],
+        choices: ["websocket", "webrtc", "http"],
         description: "Used to communicate with server",
       });
       y.option("socks-port", {

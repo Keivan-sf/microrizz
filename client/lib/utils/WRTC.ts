@@ -8,6 +8,7 @@ import {
 import { Connection } from "./interfaces";
 import axios from "axios";
 import { URL } from "url";
+import { joinURLPaths } from "./url";
 
 export class WRTCClient implements Connection {
   private peer: RTCPeerConnection;
@@ -129,6 +130,3 @@ export class WRTCClient implements Connection {
   }
 }
 
-function joinURLPaths(basePath: string, additionalPath: string) {
-  return basePath.replace(/\/$/, "") + "/" + additionalPath.replace(/^\//, "");
-}
