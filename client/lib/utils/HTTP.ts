@@ -34,7 +34,21 @@ export class HTTPConnection implements Connection {
     });
     console.log("headers:", form.getHeaders());
 
-    const response = await axios.post(this.end_point, form, {
+    const response = await axios.get(this.end_point, {
+      responseType: "stream",
+      headers: {
+        "Content-Type": "application/octet-stream",
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        Accept: "*/*",
+      },
+    });
+    response.data.on("data", (data: Buffer) => {
+      console.log("getting data from server:", data);
+      this.emitter.emit("data", data);
+    });
+
+    axios.post(this.end_point, form, {
       responseType: "stream",
       headers: {
         "Content-Type": "application/octet-stream",
@@ -46,10 +60,7 @@ export class HTTPConnection implements Connection {
       maxBodyLength: Infinity,
       maxContentLength: Infinity,
     });
-    response.data.on("data", (data: Buffer) => {
-      console.log("getting data from server:", data);
-      this.emitter.emit("data", data);
-    });
+
   }
 
   write(data: Buffer): void {
