@@ -185,7 +185,7 @@ export class Client {
     if (task.udpSocket) {
       try {
         task.udpSocket.close();
-      } catch (err) { }
+      } catch (err) {}
     }
     this.tasks.delete(task.id);
     if (sendCloseCommandToClient) {

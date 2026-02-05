@@ -9,13 +9,22 @@ export class CHACHAEncryptionWrapper implements Connection {
       key_size: number;
       nounce_size: number;
       tag_size: number;
+      ignore_incoming_packets: number;
+      ignore_outgoing_packets: number;
     },
   ) {}
+  private ignored_incoming = 0;
+  private ignored_outgoing = 0;
   on(type: "data", cb: (data: Buffer) => void): void;
   on(type: "close", cb: () => void): void;
   on(type: "error", cb: (error: any) => void): void;
   on(type: "connection", cb: () => void): void;
   on(type: any, cb: any): void {
+    if (this.ignored_incoming < this.config.ignore_incoming_packets) {
+      this.ignored_incoming++;
+      return;
+    }
+
     let modified_callback = cb;
     if (type == "data") {
       modified_callback = (data: Buffer) => {
@@ -28,6 +37,11 @@ export class CHACHAEncryptionWrapper implements Connection {
     this.connection.close();
   }
   write(data: Buffer): void {
+    if (this.ignored_outgoing < this.config.ignore_outgoing_packets) {
+      this.ignored_outgoing++;
+      this.connection.write(data);
+      return;
+    }
     this.connection.write(this.encrypt(data));
   }
 

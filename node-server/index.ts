@@ -78,10 +78,17 @@ export const routeHttpStreaming = (router: Router) => {
     const encrypted_connection = new CHACHAEncryptionWrapper(
       http_connection,
       key,
-      { key_size: 32, nounce_size: 12, tag_size: 16 },
+      {
+        key_size: 32,
+        nounce_size: 12,
+        tag_size: 16,
+        ignore_incoming_packets: 1,
+        ignore_outgoing_packets: 0,
+      },
     );
 
-    new Client(encrypted_connection, TIME_OUT);
+    // new Client(encrypted_connection, TIME_OUT);
+    new Client(http_connection, TIME_OUT);
     res.send({ end_point });
   });
 };

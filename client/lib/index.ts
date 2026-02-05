@@ -142,12 +142,20 @@ async function getConnection(
       0x1f, 0x2e, 0x2d, 0x9d, 0xb6, 0x20, 0x44, 0x0b,
     ]);
 
-    const encrypted_connection = new CHACHAEncryptionWrapper(
-      http_connection,
-      key,
-      { key_size: 32, nounce_size: 12, tag_size: 16 },
-    );
+    return http_connection;
 
-    return encrypted_connection;
+    // const encrypted_connection = new CHACHAEncryptionWrapper(
+    //   http_connection,
+    //   key,
+    //   {
+    //     key_size: 32,
+    //     nounce_size: 12,
+    //     tag_size: 16,
+    //     ignore_incoming_packets: 0,
+    //     ignore_outgoing_packets: 1,
+    //   },
+    // );
+    //
+    // return encrypted_connection;
   }
 }
