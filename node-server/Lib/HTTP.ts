@@ -17,7 +17,7 @@ export class HTTPConnection implements Connection {
     });
   }
   write(data: Buffer): void {
-    // this.res?.write(data);
+    this.res?.write(data);
   }
   on(type: string, cb: any): void {
     this.emitter.on(type, cb);
