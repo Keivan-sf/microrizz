@@ -13,12 +13,12 @@
   "license": "ISC",
   "dependencies": {
     "@roamhq/wrtc": "^0.9.0",
-    "axios": "^1.10.0",
+    "axios": "^1.18.1",
     "dotenv": "^16.4.5",
     "express": "^5.1.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3",
-    "ws": "^8.18.3"
+    "ws": "^8.21.1"
   },
   "packageManager": "pnpm@9.1.0+sha1.217063ce3fcbf44f3051666f38b810f1ddefee4a",
   "devDependencies": {

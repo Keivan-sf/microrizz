@@ -15,10 +15,10 @@
   "dependencies": {
     "@roamhq/wrtc": "^0.9.0",
     "@types/node": "^20.11.16",
-    "axios": "^1.10.0",
+    "axios": "^1.18.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3",
-    "ws": "^8.18.3",
+    "ws": "^8.21.1",
     "yargs": "^17.7.2"
   },
   "devDependencies": {
